@@ -8,6 +8,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoryPoker.Client.Web.Api",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoryPoker.Server.Silo", "Server\StoryPoker.Server.Silo\StoryPoker.Server.Silo.csproj", "{5E852677-23E9-4466-871A-7FE2B54530FA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFiles", "SolutionFiles", "{D68C3C52-4ED3-4EC5-9D55-8C4F7A6ADD84}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoryPoker.Server.Grains", "Server\StoryPoker.Server.Grains\StoryPoker.Server.Grains.csproj", "{EAD8CA86-CC06-41C5-AAD5-53BCE7BF9894}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoryPoker.Server.Abstractions", "Server\StoryPoker.Server.Abstractions\StoryPoker.Server.Abstractions.csproj", "{FF18FE64-D505-4CA8-B65B-4D7E7046498E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -16,6 +25,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{160CAF19-ECA2-4495-8E5C-64CF9EF7A27C} = {CB6A5180-977C-4947-97EC-805E02572286}
 		{5E852677-23E9-4466-871A-7FE2B54530FA} = {B552A582-5901-460E-84AF-35445EFFE0D6}
+		{EAD8CA86-CC06-41C5-AAD5-53BCE7BF9894} = {B552A582-5901-460E-84AF-35445EFFE0D6}
+		{FF18FE64-D505-4CA8-B65B-4D7E7046498E} = {B552A582-5901-460E-84AF-35445EFFE0D6}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{160CAF19-ECA2-4495-8E5C-64CF9EF7A27C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -26,5 +37,13 @@ Global
 		{5E852677-23E9-4466-871A-7FE2B54530FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E852677-23E9-4466-871A-7FE2B54530FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E852677-23E9-4466-871A-7FE2B54530FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAD8CA86-CC06-41C5-AAD5-53BCE7BF9894}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAD8CA86-CC06-41C5-AAD5-53BCE7BF9894}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAD8CA86-CC06-41C5-AAD5-53BCE7BF9894}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAD8CA86-CC06-41C5-AAD5-53BCE7BF9894}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF18FE64-D505-4CA8-B65B-4D7E7046498E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF18FE64-D505-4CA8-B65B-4D7E7046498E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF18FE64-D505-4CA8-B65B-4D7E7046498E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF18FE64-D505-4CA8-B65B-4D7E7046498E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

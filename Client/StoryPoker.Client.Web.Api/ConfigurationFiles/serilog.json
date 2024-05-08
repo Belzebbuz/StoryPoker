@@ -1,0 +1,34 @@
+{
+  "Serilog": {
+    "Using": [],
+    "Enrich": [
+      "FromLogContext",
+      "WithMachineName",
+      "WithProcessId",
+      "WithThreadId"
+    ],
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Information",
+        "Microsoft.Hosting.Lifetime": "Information",
+        "System": "Information"
+      }
+    },
+    "Properties": {
+      "Application": "TheStarters"
+    },
+    "WriteTo": [
+      {
+        "Args": {
+          "path": "Logs/logs.json",
+          "formatter": "Serilog.Formatting.Json.JsonFormatter, Serilog",
+          "rollingInterval": "Day",
+          "restrictedToMinimumLevel": "Information",
+          "retainedFileCountLimit": 5
+        },
+        "Name": "File"
+      }
+    ]
+  }
+}
