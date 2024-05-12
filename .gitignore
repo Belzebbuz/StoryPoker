@@ -4,3 +4,4 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 .idea
+Client/StoryPoker.Client.Web.Api/Logs
