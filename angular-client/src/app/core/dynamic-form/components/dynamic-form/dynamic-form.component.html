@@ -1,0 +1,14 @@
+<div>
+  <form class="flex flex-col gap-4" (ngSubmit)="submit()" [formGroup]="form">
+
+    <div *ngFor="let input of inputs">
+      <app-dynamic-input [submitted]="submitted" [question]="input" [form]="form"></app-dynamic-input>
+    </div>
+
+      <button type="submit" class="bg-primary-blue-500 hover:bg-primary-blue-400 text-white text-xl cursor-pointer rounded py-2 px-4">{{confirmText}}</button>
+  </form>
+
+  <div *ngIf="payLoad">
+    <strong>Saved the following values</strong><br>{{payLoad}}
+  </div>
+</div>

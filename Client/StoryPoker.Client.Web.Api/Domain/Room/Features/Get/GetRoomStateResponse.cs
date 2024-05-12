@@ -4,49 +4,59 @@ namespace StoryPoker.Client.Web.Api.Domain.Room.Features.Get;
 
 public class GetRoomStateResponse
 {
-
     public GetRoomStateResponse(Guid userId, RoomGrainState grainState)
     {
+        PlayerId = userId;
+        IsPlayerAdded = grainState.Players.ContainsKey(userId);
         Name = grainState.Name;
-        VoteStarted = grainState.VoteStarted;
-        VoteEnded = grainState.VoteEnded;
-        VotingIssueId = grainState.VotingIssueId;
-        Players = grainState.Players.ToDictionary(
-            x => x.Key,
-            x => (Player)x.Value);
-        Issues = ToInternal(userId,grainState);
+        VotingIssue = GetVotingIssue(grainState);
+        IsSpectator = grainState.Players.GetValueOrDefault(userId)?.IsSpectator ?? false;
+        Players = grainState.Players.Values
+            .OrderBy(x => x.Order)
+            .Select(
+                x =>
+                {
+                    var playerVoted =
+                        grainState.VotingIssueId.HasValue &&
+                        grainState.Issues[grainState.VotingIssueId.Value].PlayerStoryPoints
+                            .ContainsKey(x.Id);
+                    var canShowValue =
+                        grainState.VotingIssueId.HasValue &&
+                        grainState.Issues[grainState.VotingIssueId.Value].Stage != VotingStage.Voting;
+                    int? playerVotePoint = playerVoted && canShowValue
+                        ? grainState.Issues[grainState.VotingIssueId!.Value].PlayerStoryPoints[x.Id]
+                        : null;
+                    return new Player(x.Id, x.Name, x.IsSpectator,
+                        new PlayerIssueStoryPoint(playerVoted, playerVotePoint));
+                }).ToArray().AsReadOnly();
+        Issues = grainState.Issues
+            .Values
+            .OrderByDescending(x => x.Order)
+            .Select(
+                issueState =>
+                    new Issue(issueState.Id, issueState.Title, VotingStage.NotStarted, issueState.StoryPoints))
+            .ToArray().AsReadOnly();
     }
 
-    private static IDictionary<Guid,Issue> ToInternal(Guid userId, RoomGrainState grainState)
+    private static Issue? GetVotingIssue(RoomGrainState grainState)
     {
-        var result = new Dictionary<Guid, Issue>();
-        foreach (var (_, issueState) in grainState.Issues)
-        {
-            var points = issueState.PlayerStoryPoints
-                .ToDictionary(x => x.Key,
-                    x =>
-                    {
-                        int? sp = x.Value;
-                        return !grainState.VoteEnded ? null : sp;
-                    });
-            var issue = new Issue(issueState.Id, issueState.Title, issueState.StoryPoints, points);
-            result[issue.Id] = issue;
-        }
-        return result;
+        if (!grainState.VotingIssueId.HasValue)
+            return null;
+        var issue = grainState.Issues[grainState.VotingIssueId.Value];
+        return new Issue(issue.Id, issue.Title, issue.Stage, issue.StoryPoints);
     }
 
+    public Guid PlayerId { get; }
+    public bool IsPlayerAdded { get; }
+    public bool IsSpectator { get; }
     public string Name { get; }
-    public bool VoteStarted { get; }
-    public bool VoteEnded { get; }
-    public Guid? VotingIssueId { get; }
-    public IDictionary<Guid, Player> Players { get; }
-    public IDictionary<Guid, Issue> Issues { get; }
+    public Issue? VotingIssue { get; }
+    public IReadOnlyCollection<Player> Players { get; }
+    public IReadOnlyCollection<Issue> Issues { get; }
 
-    public record Player(Guid Id, string Name, bool IsSpectator)
-    {
-        public static implicit operator Player(PlayerState state) =>
-            new (state.Id, state.Name, state.IsSpectator);
-    };
+    public record Player(Guid Id, string Name, bool IsSpectator, PlayerIssueStoryPoint CurrentVotingPoint);
 
-    public record Issue(Guid Id, string Title, int? StoryPoints, Dictionary<Guid, int?> PlayerStoryPoints);
+    public record PlayerIssueStoryPoint(bool Voted, int? Value);
+
+    public record Issue(Guid Id, string Title, VotingStage Stage, int? StoryPoints);
 }

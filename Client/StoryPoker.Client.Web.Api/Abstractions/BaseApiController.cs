@@ -8,6 +8,6 @@ namespace StoryPoker.Client.Web.Api.Abstractions;
 [Authorize]
 public abstract class BaseApiController : ControllerBase
 {
-    protected IGrainFactory GrainClient => HttpContext.RequestServices.GetRequiredService<IGrainFactory>();
+    protected IClusterClient GrainClient => HttpContext.RequestServices.GetRequiredService<IClusterClient>();
     protected ICurrentUser CurrentUser =>  HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
 }

@@ -4,6 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,28 +20,15 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Logs\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Remove="Logs\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Content Remove="Logs\**" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Remove="Logs\**" />
     </ItemGroup>
 
     <ItemGroup>
-      <_ContentIncludedByDefault Remove="Logs\logs20240507.json" />
+      <Content Update="wwwroot\**">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="..\..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Domain\" />
-      <Folder Include="Domain\Room\Features\" />
-    </ItemGroup>
-
 </Project>

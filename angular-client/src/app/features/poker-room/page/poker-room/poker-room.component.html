@@ -1,0 +1,100 @@
+<div
+  *ngIf="!(signalr.state$ | async)"
+  class="flex flex-col items-center justify-center w-dvw h-svh"
+>
+  <div class="w-32 h-32 bg-primary-blue-200 animate-ping rounded-full"></div>
+</div>
+
+<div
+  *ngIf="(signalr.state$ | async) && roomState"
+  class="flex flex-col md:flex-row h-svh"
+>
+  <!-- ИГРОКИ -->
+  <app-players-list
+    [votingIssue]="roomState.votingIssue"
+    [playerId]="roomState.playerId"
+    [players]="roomState.players"
+    class="p-2 md:w-1/4 max-md:h-1/6"
+  />
+
+  <!-- ГОЛОСОВАНИЕ -->
+  <div class="md:w-1/2 max-md:h-2/3 border border-primary-gray-light">
+    <h1 class="text-center text-4xl font-bold">{{ roomState.name }}</h1>
+    <div *ngIf="!roomState.votingIssue" class="">Задача не выбрана...</div>
+    <div
+      *ngIf="roomState.votingIssue"
+      class="flex flex-col justify-items-center gap-4"
+    >
+      <div
+        class="flex flex-col gap-2 self-center mt-4 rounded border border-gray-400 p-4 w-4/5"
+      >
+        <span class="text-3xl font-bold">Задача:</span>
+        <span class="text-2xl">{{ roomState.votingIssue.title }}</span>
+        <div class="flex flex-row items-center gap-4 border-t pt-2">
+          <span class="text-xl font-bold">Оценка: </span>
+          <div class="flex justify-center items-center bg-gray-200 text-black w-10 h-10 rounded-md">
+            <span class="font-bold">{{ roomState.votingIssue.storyPoints }}</span>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="roomState.isSpectator" class="self-center text-3xl font-bold">
+        <button
+          *ngIf="roomState.votingIssue.stage == 0"
+          (click)="changeVoteState(0)"
+          class="btn-primary"
+        >
+          Начать голосование
+        </button>
+        <button
+          *ngIf="roomState.votingIssue.stage == 1"
+          (click)="changeVoteState(1)"
+          class="btn-primary"
+        >
+          Закончить голосование
+        </button>
+        <button
+          *ngIf="roomState.votingIssue.stage == 2"
+          (click)="changeVoteState(0)"
+          class="btn-primary"
+        >
+          Начать голосование
+        </button>
+      </div>
+
+      <div *ngIf="!roomState.isSpectator" class="self-center text-2xl">
+        <span *ngIf="roomState.votingIssue.stage == 0"
+          >Голосование еще не началось...</span
+        >
+        <span *ngIf="roomState.votingIssue.stage == 1"
+          >Голосование началось. Выберите оценку.</span
+        >
+        <span *ngIf="roomState.votingIssue.stage == 2"
+          >Голосование закончилось.</span
+        >
+      </div>
+      <div
+        *ngIf="!roomState.isSpectator && roomState.votingIssue.stage == 1"
+        class="flex justify-center py-4 border-y w-full animate-fade-in overflow-x-auto"
+      >
+        <div class="flex flex-row gap-4">
+          <div
+            (click)="setPlayerStoryPoint(value)"
+            *ngFor="let value of votePoints"
+            class="flex items-center justify-center w-14 h-20 p-4 border rounded hover:bg-primary-blue-100 cursor-pointer ease-in duration-100 hover:-translate-y-[5px]"
+          >
+            <span class="text-2xl select-none">{{ value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЗАДАЧИ -->
+  <app-issues-list
+    *ngIf="pokerRoomId"
+    [spectator]="roomState.isSpectator"
+    [issues]="roomState.issues"
+    [roomId]="pokerRoomId"
+    class="p-2 md:w-1/4 max-md:h-1/4 flex flex-col justify-items-center"
+  />
+</div>

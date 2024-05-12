@@ -1,63 +1,92 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Globalization;
+using System.Threading.Channels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using StoryPoker.Client.Web.Api.Abstractions;
+using StoryPoker.Client.Web.Api.Attributes;
+using StoryPoker.Client.Web.Api.Configurations;
+using StoryPoker.Client.Web.Api.Domain.Room.Features.AddIssue;
+using StoryPoker.Client.Web.Api.Domain.Room.Features.AddPlayer;
 using StoryPoker.Client.Web.Api.Domain.Room.Features.Get;
 using StoryPoker.Client.Web.Api.Domain.Room.Features.Init;
+using StoryPoker.Client.Web.Api.Domain.Room.Features.VotingStateChange;
+using StoryPoker.Server.Abstractions;
 using StoryPoker.Server.Abstractions.Room;
 using StoryPoker.Server.Abstractions.Room.Models;
 
 namespace StoryPoker.Client.Web.Api.Domain.Room.Controllers;
 
 [Route("api/[controller]")]
+[RoomExistFilter]
 public class RoomController : BaseApiController
 {
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<GetRoomStateResponse>> GetStateAsync(Guid id)
     {
         var grainState = await GrainClient.GetGrain<IRoomGrain>(id).GetAsync();
-        if (grainState is null)
-            return NotFound();
         var userId = CurrentUser.UserId;
         return Ok(new GetRoomStateResponse(userId, grainState));
     }
 
     [HttpPost]
-    public async Task<ActionResult> InitAsync(InitRoomStateRequest request)
+    public async Task<ActionResult> CreateAsync(
+        InitRoomStateRequest request,
+        [FromServices] IOptionsMonitor<WebHookConfig> webhookConfig)
     {
-        var roomId = Guid.NewGuid();
-        var roomGrain = GrainClient.GetGrain<IRoomGrain>(roomId);
         var userId = CurrentUser.UserId;
         var initStateRequest = request.ToInternal(userId);
-        var result = await roomGrain.InitStateAsync(initStateRequest);
-        return  result.IsSuccess ? Ok($"/api/room/{roomId}") : BadRequest(result.Error);
+        var result = await GrainClient
+            .GetGrain<IRoomStorageGrain>(Guid.Empty)
+            .CreateRoomAsync(initStateRequest);
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+        var createdRoomLink = string.Format(CultureInfo.InvariantCulture, webhookConfig.CurrentValue.CreatedRoomLink, result.Value);
+        return  Ok(new {link = createdRoomLink});
     }
 
     [HttpPost("{id:guid}/players")]
-    public async Task<ActionResult> AddPlayerAsync(Guid id, [FromBody]string name)
+    public async Task<ActionResult> AddPlayerAsync(
+        Guid id,
+        AddPlayerRequest request)
     {
         var userId = CurrentUser.UserId;
-        var request = new AddPlayerRequest(userId, name);
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).AddPlayerAsync(request);
+        var internalRequest = request.ToInternal(userId);
+        var result = await GrainClient.GetGrain<IRoomGrain>(id).AddPlayerAsync(internalRequest);
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
-    [HttpPut("{id:guid}/start-vote")]
-    public async Task<ActionResult> StartVoteAsync(Guid id)
+
+    [HttpDelete("{id:guid}/players")]
+    public async Task<ActionResult> RemovePlayerAsync(Guid id)
     {
         var userId = CurrentUser.UserId;
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).StartVoteAsync();
+        var result = await GrainClient.GetGrain<IRoomGrain>(id).RemovePlayerAsync(userId);
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
-    [HttpPut("{id:guid}/stop-vote")]
-    public async Task<ActionResult> StopVoteAsync(Guid id)
+
+    [HttpPut("{id:guid}/vote-stage")]
+    public async Task<ActionResult> StopVoteAsync(Guid id, [FromQuery]VoteStageChangeCommand stage)
     {
-        var userId = CurrentUser.UserId;
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).StopVoteAsync();
+        var result = stage switch
+        {
+            VoteStageChangeCommand.Start => await GrainClient.GetGrain<IRoomGrain>(id).StartVoteAsync(),
+            VoteStageChangeCommand.Stop => await GrainClient.GetGrain<IRoomGrain>(id).StopVoteAsync(),
+            _ => ResponseState.Fail("Неверная команда")
+        };
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
+
     [HttpPost("{id:guid}/issues")]
-    public async Task<ActionResult> AddIssuesAsync(Guid id, [FromBody]string title)
+    public async Task<ActionResult> AddIssuesAsync(Guid id, AddIssueRequest request)
     {
-        var request = new AddIssueRequest(title);
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).AddIssueAsync(request);
+        var internalRequest = new RoomRequest.AddIssue(request.Title);
+        var result = await GrainClient.GetGrain<IRoomGrain>(id).AddIssueAsync(internalRequest);
+        return result.IsSuccess ? Ok() : BadRequest(result.Error);
+    }
+
+    [HttpDelete("{id:guid}/issues/{issueId:guid}")]
+    public async Task<ActionResult> AddIssuesAsync(Guid id,Guid issueId)
+    {
+        var result = await GrainClient.GetGrain<IRoomGrain>(id).RemoveIssueAsync(issueId);
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
@@ -73,7 +102,7 @@ public class RoomController : BaseApiController
         [FromQuery] int storyPoint)
     {
         var userId = CurrentUser.UserId;
-        var request = new SetStoryPointRequest(userId, storyPoint);
+        var request = new RoomRequest.SetStoryPoint(userId, storyPoint);
         var result = await GrainClient.GetGrain<IRoomGrain>(id)
             .SetPlayerIssueStoryPointAsync(request);
         return result.IsSuccess ? Ok(): BadRequest(result.Error);

@@ -1,0 +1,14 @@
+{
+  "/api": {
+    "target": "http://127.0.0.1:5265",
+    "secure": false,
+    "ws": true
+  },
+  "/files/*": {
+    "target": "http://127.0.0.1:5265",
+    "secure": false,
+    "pathRewrite": {
+      "^/files": ""
+    }
+  }
+}

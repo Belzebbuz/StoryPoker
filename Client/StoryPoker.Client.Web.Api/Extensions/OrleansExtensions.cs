@@ -1,4 +1,5 @@
 ﻿using Orleans.Configuration;
+using StackExchange.Redis;
 using StoryPoker.Client.Web.Api.Configurations;
 using Throw;
 
@@ -12,10 +13,18 @@ public static class OrleansExtensions
         {
             var orleansSettings = config.GetSection(nameof(ClusterConfig)).Get<ClusterConfig>();
             orleansSettings.ThrowIfNull("Отсутствуют настройки кластера");
-            client.UseZooKeeperClustering(options =>
+            client
+                .UseRedisClustering(options => options.ConfigurationOptions = new()
                 {
-                    options.ConnectionString = orleansSettings.ConnectionString;
+                    EndPoints = new EndPointCollection()
+                    {
+                        new(orleansSettings.ConnectionString)
+                    }
                 })
+                // .UseZooKeeperClustering(options =>
+                // {
+                //     options.ConnectionString = orleansSettings.ConnectionString;
+                // })
                 .Configure<ClusterOptions>(options =>
                 {
                     options.ClusterId = orleansSettings.ClusterId;

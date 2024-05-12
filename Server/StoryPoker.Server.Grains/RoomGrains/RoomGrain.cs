@@ -14,51 +14,53 @@ internal sealed class RoomGrain(
     IStorage<RoomGrainState> storageState,
     ILogger<ObservableGrain<IRoomGrainObserver>> logger) : ObservableGrain<IRoomGrainObserver>(logger), IRoomGrain
 {
-    public Task<RoomGrainState?> GetAsync()
+    public Task<RoomGrainState> GetAsync()
     {
-        RoomGrainState? state = null;
-        if (storageState.State.Instantiated)
-            state = storageState.State;
-        return Task.FromResult(state);
+        return Task.FromResult(storageState.State);
     }
 
-    public async Task<ResponseState> InitStateAsync(InitStateRequest request)
+    public async Task<ResponseState> InitStateAsync(RoomRequest.CreateRoom request)
     {
         var stateScreen = storageState.State with { };
         if (storageState.State.Instantiated)
             return ResponseState.Fail("Комната уже создана");
         storageState.State = RoomGrainState.Init(request);
         var response = await SaveStateAsync(stateScreen);
-        await NotifyAsync();
         return response;
     }
 
-    public async Task<ResponseState> AddPlayerAsync(AddPlayerRequest request)
+    public async Task<ResponseState> AddPlayerAsync(RoomRequest.AddPlayer request)
     {
         var stateScreen = storageState.State with { };
-        var result = storageState.State.AddPlayer(request);
+        var result = storageState.State.AddNewPlayer(request);
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
-        await NotifyAsync();
+        return response;
+    }
+    public async Task<ResponseState> RemovePlayerAsync(Guid playerId)
+    {
+        var stateScreen = storageState.State with { };
+        storageState.State.RemovePlayer(playerId);
+        var response = await SaveStateAsync(stateScreen);
         return response;
     }
 
-    public async Task<ResponseState> AddIssueAsync(AddIssueRequest request)
+    public async Task<ResponseState> AddIssueAsync(RoomRequest.AddIssue request)
     {
         var stateScreen = storageState.State with { };
         storageState.State.AddIssue(request);
         var response = await SaveStateAsync(stateScreen);
-        await NotifyAsync();
         return response;
     }
 
     public async Task<ResponseState> RemoveIssueAsync(Guid issueId)
     {
         var stateScreen = storageState.State with { };
-        storageState.State.RemoveIssue(issueId);
+        var result =  storageState.State.RemoveIssue(issueId);
+        if (result.IsError)
+            return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
-        await NotifyAsync();
         return response;
     }
 
@@ -69,18 +71,16 @@ internal sealed class RoomGrain(
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
-        await NotifyAsync();
         return response;
     }
 
-    public async Task<ResponseState> SetPlayerIssueStoryPointAsync(SetStoryPointRequest request)
+    public async Task<ResponseState> SetPlayerIssueStoryPointAsync(RoomRequest.SetStoryPoint request)
     {
         var stateScreen = storageState.State with { };
         var result = storageState.State.SetStoryPoint(request);
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
-        await NotifyAsync();
         return response;
     }
 
@@ -91,7 +91,6 @@ internal sealed class RoomGrain(
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
-        await NotifyAsync();
         return response;
     }
 
@@ -102,8 +101,14 @@ internal sealed class RoomGrain(
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
-        await NotifyAsync();
         return response;
+    }
+
+    public Task<ResponseState<ICollection<Guid>>> GetPlayersAsync()
+    {
+        return !storageState.State.Instantiated
+            ? ResponseState<ICollection<Guid>>.Fail("Комната закрыта")
+            : ResponseState<ICollection<Guid>>.Success(storageState.State.Players.Keys.ToList());
     }
 
     private async Task<ResponseState> SaveStateAsync(RoomGrainState stateScreen)
@@ -111,6 +116,7 @@ internal sealed class RoomGrain(
         try
         {
             await storageState.WriteStateAsync();
+            await NotifyAsync();
             return ResponseState.Success();
         }
         catch (Exception e)
@@ -122,7 +128,7 @@ internal sealed class RoomGrain(
 
     private ValueTask NotifyAsync()
     {
-        ObserverManager.Notify(ob => ob.RoomStateChangedAsync());
+        ObserverManager.Notify(ob => ob.RoomStateChangedAsync(this.GetPrimaryKey(), storageState.State.Players.Any()));
         return ValueTask.CompletedTask;
     }
 }

@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <PackageReference Include="ErrorOr" Version="2.0.1" />
+      <PackageReference Include="Microsoft.Orleans.Clustering.Redis" Version="8.1.0" />
       <PackageReference Include="Microsoft.Orleans.Sdk" Version="8.1.0" />
       <PackageReference Include="Throw" Version="1.4.0" />
     </ItemGroup>

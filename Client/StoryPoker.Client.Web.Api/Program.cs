@@ -1,9 +1,23 @@
 using System.Globalization;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Channels;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using StoryPoker.Client.Web.Api.Abstractions;
+using StoryPoker.Client.Web.Api.Abstractions.Notifications;
+using StoryPoker.Client.Web.Api.Configurations;
+using StoryPoker.Client.Web.Api.Domain.Room.Features.Get;
 using StoryPoker.Client.Web.Api.Extensions;
+using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver;
+using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;
+using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Observers;
+using StoryPoker.Client.Web.Api.Infrastructure.Hubs;
+using StoryPoker.Client.Web.Api.Infrastructure.Notifications;
+using StoryPoker.Server.Abstractions.Room;
+using StoryPoker.Server.Abstractions.Room.Models;
+
 StaticLogger.EnsureInitialized();
 Log.Information("Server Booting Up...");
 
@@ -24,17 +38,47 @@ try
             configure.LoginPath = "/api/account/login";
         });
     builder.Services.AddSwaggerGen();
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .ConfigureApiBehaviorOptions(config =>
+        {
+            config.InvalidModelStateResponseFactory = context =>
+            {
+                return new BadRequestObjectResult(
+                    string.Join(Environment.NewLine,
+                        context.ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage))
+                );
+            };
+        });
+    builder.Services.Configure<WebHookConfig>(builder.Configuration.GetSection(nameof(WebHookConfig)));
     builder.Services.AddCurrentUser();
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("CorsPolicy", builder => builder
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+    });
+    builder.Services.AddTransient<NotificationHub>();
+    builder.Services.AddSignalR();
+    builder.Services.AddTransient<INotificationService, NotificationService>();
+    builder.Services.AddTransient<IRoomGrainObserver, RoomObserver>();
+    builder.Services.AddSingleton<IGrainSubscriptionBus, GrainsMessageChannel>();
+    builder.Services.AddSingleton<IConnectionStorage, ConnectionStorage>();
+    builder.Services.AddHostedService<GrainObserverService>();
     var app = builder.Build();
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    app.UseCors();
     app.UseAuthentication();
     app.UseAuthorization();
     app.UseCurrentUser();
+    app.UseStaticFiles();
+    app.MapFallbackToFile("index.html");
+    app.MapHub<NotificationHub>("/api/notifications");
     app.MapControllers();
 
     app.Run();
@@ -50,40 +94,3 @@ finally
     Log.Information("Server Shutting down...");
     Log.CloseAndFlush();
 }
-
-// Каждый может зайти создать комнату
-// Комната имеет название, тот кто создает может зайти в режиме ведущего
-// В комнату может войти неограниченное кол-во участников/групп/заданий (до платной версии)
-// Когда входит новый игрок, появляется запрос на имя
-// В центре расположена ссылка на задачу
-// Справа список задач
-// Слева список игроков
-// Текущий игрок обозначен (стрелка/цвет)
-// Снизу показаны возможные кликабельные оценки (карточки с цифрами фибоначи)
-// У ведущего(кто создал) есть кнопка Добавить(создает новую игру)
-// У ведущего(кто создал) есть кнопка Начать(начинает оценку)
-// После начала игроки выбирют карты, до окончания игры скрыты выбранные карты, выбор можно менять
-// У ведущего есть кнопка открыть карты(показывает карты игроков)
-// После вскрытия выводится округленное в большую стороны из чисел фибоначи число
-//
-/* Сценарий №1
- * 1) Ведущий открывает главную страницу
- * 2) Жмет кнопку создать сессию
- * 3) Вводит название сессии нпример BE
- * 4) Он переходит на страницу сессии и получает ссылку на комнату. Автоматически выбирается режим ведущего
- * 5) Ведущий делится ссылкой
- * 6) Игрок переходит поссылке, попадает на окно комнаты, но оно заблокировано пока он не введет имя
- * 7) После входа он отображается в списке игроков справа.
- * 8) Как только все игроки собрались Ведущий жмет кнопку добавить задачу, указывает ссылку и описание если надо
- * 9) После добавления, карточка задачи отображается в центре как текущая для оченки и в списке справа.
- * 10) Он может продолжить добавлять задачи, оцениваться будет задача, которая находится в центре
- * 11) Ведущий жмет "начало" и игроки начинают выбирать карточки
- * 12) Игроки выбирают карту и по желанию жмут кнопку подтвердить(чтобы показать готовность и лишний раз не спрашивать кто готов)
- * 13) Ведущий жмет "Раскрыть карты" и карточки игроков переворачиваются и автоматически показывается оценка
- * 14) Расчитанная оценка появлятся на карточке задачи, игроки в ходе обсуждения могут менять оценку и автоматически будет просиходить перерасчет
- *
- * Фичи:
- * 1) Одна комната(одна текущая задача) несколько групп
- * 2) аккаунт - хранить созданные сессии
- *
- */

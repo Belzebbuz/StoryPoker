@@ -1,0 +1,8 @@
+<div *ngIf="players" class="flex flex-row md:flex-col gap-2">
+  <span class="ml-2 max-md:hidden md:text-3xl">Участники:</span>
+  <div *ngFor="let player of players">
+   <app-player 
+   [votingIssue]="votingIssue" 
+   [player]="player"/>
+  </div>
+</div>

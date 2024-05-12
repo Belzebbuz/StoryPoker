@@ -20,15 +20,21 @@ public class ResponseState
     public static implicit operator Task<ResponseState>(ResponseState state) => Task.FromResult(state);
 }
 
-public class ResponseState<T> : ResponseState where T: class
+[GenerateSerializer, Immutable]
+public class ResponseState<T> : ResponseState
 {
     [Id(0)] public T? Value { get; init; }
 
-    protected ResponseState(T? value, bool isSuccess, string? error)
+    private ResponseState(T value, bool isSuccess, string? error)
         : base(isSuccess, error)
     {
         Value = value;
     }
-    public static ResponseState Success(T value) => new ResponseState<T>(value, true, null);
-    public static new ResponseState Fail(string error) => new ResponseState<T>(null,false, error);
+    private ResponseState(bool isSuccess, string? error)
+        : base(isSuccess, error)
+    {
+    }
+    public static ResponseState<T> Success(T value) => new (value, true, null);
+    public static new ResponseState<T> Fail(string error) => new (false, error);
+    public static implicit operator Task<ResponseState<T>>(ResponseState<T> state) => Task.FromResult(state);
 }

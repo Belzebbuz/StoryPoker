@@ -1,0 +1,29 @@
+<div class="flex flex-col gap-2 border rounded bg-gray-50 border-gray-200 p-2">
+  <div [innerHTML]="replaceUrlsWithLinks(issue.title)" class="text-2xl break-words text-wrap"></div>
+
+  <div class="flex flex-row items-center gap-4 border-t pt-2">
+    <button
+      *ngIf="spectator"
+      (click)="selectVotingIssue()"
+      class="btn-primary-outline text-lg font-bold"
+    >
+      Голосовать
+    </button>
+    <div class="flex flex-row gap-2 grow">
+      <span class="text-xl font-bold">Оценка: </span>
+      <div
+        class="flex justify-center items-center bg-gray-200 text-black w-8 h-8 rounded-md"
+      >
+        <span *ngIf="issue.storyPoints" class="font-bold">{{ issue.storyPoints }}</span>
+        <span *ngIf="!issue.storyPoints" class="font-bold">-</span>
+      </div>
+    </div>
+    <button
+      *ngIf="spectator"
+      (click)="deleteIssue()"
+      class="btn-danger text-lg font-bold"
+    >
+      <app-icon-trash />
+    </button>
+  </div>
+</div>

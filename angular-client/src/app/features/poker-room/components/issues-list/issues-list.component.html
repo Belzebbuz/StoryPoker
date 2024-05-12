@@ -1,0 +1,14 @@
+<div *ngIf="issues" class="flex flex-row md:flex-col gap-2 overflow-y-auto max-h-[95%]">
+  <span class="ml-2 max-md:hidden md:text-3xl">Задачи:</span>
+  <div *ngFor="let issue of issues">
+    <app-issue 
+    [spectator]="spectator"
+    [roomId]="roomId"
+    [issue]="issue"/>
+    </div>
+    <script>
+      alert('AAAA')
+    </script>
+</div>
+
+<button *ngIf="spectator" (click)="addIssueDialog()" class="self-center mt-2 w-2/3 font-bold text-xl btn-primary">Добавить</button>

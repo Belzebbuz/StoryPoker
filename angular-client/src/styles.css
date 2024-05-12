@@ -1,0 +1,33 @@
+/* You can add global styles to this file, and also import other style files */
+@import url("@angular/cdk/overlay-prebuilt.css");
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.mat-mdc-snack-bar-container.snackbar .mdc-snackbar__surface {
+}
+.mat-mdc-snack-bar-container.snackbar-type-fill-success .mdc-snackbar__surface {
+  @apply bg-primary-gray-light border border-green-600;
+}
+.mat-mdc-snack-bar-container.snackbar-type-fill-info .mdc-snackbar__surface {
+  @apply bg-primary-gray-light border border-gray-600;
+}
+.mat-mdc-snack-bar-container.snackbar-type-fill-error .mdc-snackbar__surface {
+  @apply bg-red-50 border border-red-600;
+}
+
+.btn-primary{
+  @apply rounded select-none text-white bg-primary-blue-500 hover:bg-primary-blue-400 cursor-pointer px-4 py-2
+}
+.btn-primary-outline{
+  @apply rounded select-none text-black border border-primary-blue-500 hover:bg-primary-blue-100 cursor-pointer px-4 py-2
+}
+.btn-secondary {
+  @apply rounded select-none text-white bg-primary-blue-300 hover:bg-primary-blue-200 cursor-pointer px-4 py-2
+}
+
+.btn-danger {
+  @apply rounded select-none text-black bg-red-50 border border-red-600 hover:bg-red-100 cursor-pointer px-4 py-2
+}
