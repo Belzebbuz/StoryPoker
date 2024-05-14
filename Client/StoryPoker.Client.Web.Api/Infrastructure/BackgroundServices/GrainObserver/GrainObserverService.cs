@@ -1,18 +1,18 @@
 ﻿using System.Collections.Concurrent;
-using System.Text.Json;
 using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;
-using StoryPoker.Server.Abstractions.Room;
+using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Observers;
+using StoryPoker.Server.Abstractions.Notifications;
 
 namespace StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver;
 
 public class GrainObserverService(
     IGrainSubscriptionBus subscriptionBus,
-    IServiceScopeFactory scopeFactory,
+    IServiceProvider serviceProvider,
     IGrainFactory grainFactory,
     ILogger<GrainObserverService> logger) : BackgroundService
 {
-    private readonly ConcurrentDictionary<GrainSubscription, IGrainObserver> _activeSubscribes = new();
+    private readonly ConcurrentDictionary<Guid, (GrainSubscription subscription, IGrainObserver observer)> _activeSubscribes = new();
     private readonly SemaphoreSlim _semaphore = new(1);
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -29,21 +29,13 @@ public class GrainObserverService(
 
     private async Task UnsubscribeGrainAsync(GrainUnsubscription unsubscribe)
     {
-        var subscribe = new GrainSubscription(unsubscribe.RoomId);
-        if(!_activeSubscribes.TryRemove(subscribe, out var reference))
+        if(!_activeSubscribes.TryRemove(unsubscribe.RoomId, out var observer))
         {
             logger.LogWarning($"Подписка для комнаты №{unsubscribe.RoomId} не найдена.");
             return;
         }
-
-        if (reference is not IRoomGrainObserver subObj)
-        {
-            logger.LogWarning($"Подписка для комнаты №{unsubscribe.RoomId} не найдена.");
-            return;
-        }
-
-        await grainFactory.GetGrain<IRoomGrain>(unsubscribe.RoomId).UnsubscribeAsync(subObj);
-        logger.LogInformation($"RoomId: {subscribe.RoomId} подписка удалена");
+        await observer.subscription.ResubscribeStoppingToken.CancelAsync();
+        logger.LogInformation($"RoomId: {unsubscribe.RoomId} подписка удалена");
     }
 
     private async Task SubscribeGrainAsync(GrainSubscription subscribe)
@@ -51,16 +43,15 @@ public class GrainObserverService(
         try
         {
             await _semaphore.WaitAsync();
-            if (_activeSubscribes.ContainsKey(subscribe))
+            if (_activeSubscribes.ContainsKey(subscribe.RoomId))
             {
                 logger.LogInformation($"RoomId: {subscribe.RoomId} подписка уже создана");
                 return;
             }
-            await using var scope = scopeFactory.CreateAsyncScope();
-            var observer = scope.ServiceProvider.GetRequiredService<IRoomGrainObserver>();
-            var reference = grainFactory.CreateObjectReference<IRoomGrainObserver>(observer);
-            await grainFactory.GetGrain<IRoomGrain>(subscribe.RoomId).SubscribeAsync(reference);
-            _activeSubscribes.TryAdd(subscribe, observer);
+            var observer = serviceProvider.GetRequiredService<IRoomNotificationObserver>() as RoomNotificationObserver
+                ?? throw new ArgumentException(nameof(RoomNotificationObserver));
+            var _ = observer.StartResubscribeAsync(subscribe.RoomId, subscribe.ResubscribeStoppingToken.Token);
+            _activeSubscribes.TryAdd(subscribe.RoomId, new(subscribe, observer));
             logger.LogInformation($"RoomId: {subscribe.RoomId} подписка создана");
         }
         finally

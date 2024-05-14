@@ -29,7 +29,7 @@
         class="flex flex-col gap-2 self-center mt-4 rounded border border-gray-400 p-4 w-4/5"
       >
         <span class="text-3xl font-bold">Задача:</span>
-        <span class="text-2xl">{{ roomState.votingIssue.title }}</span>
+        <div [innerHTML]="replaceUrlsWithLinks(roomState.votingIssue.title)" class="text-2xl break-words text-wrap"></div>
         <div class="flex flex-row items-center gap-4 border-t pt-2">
           <span class="text-xl font-bold">Оценка: </span>
           <div class="flex justify-center items-center bg-gray-200 text-black w-10 h-10 rounded-md">

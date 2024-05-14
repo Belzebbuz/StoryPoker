@@ -1,4 +1,5 @@
-﻿using Orleans.Configuration;
+﻿using System.Text.Json;
+using Orleans.Configuration;
 using OrleansDashboard;
 using StackExchange.Redis;
 using StoryPoker.Server.Grains.Constants;
@@ -14,14 +15,10 @@ internal static class OrleansExtensions
         builder.UseOrleans((hostBuilder, silo) =>
         {
             var siloSettings = hostBuilder.Configuration.GetSection(nameof(SiloConfig)).Get<SiloConfig>();
+            Console.WriteLine(JsonSerializer.Serialize(siloSettings));
             siloSettings.ThrowIfNull("Не установлены настройки Silo");
-
             var dashboardOptions = hostBuilder.Configuration.GetSection(nameof(DashboardOptions)).Get<DashboardOptions>();
             dashboardOptions.ThrowIfNull("Не установлены настройки DashboardOptions");
-            // silo.UseZooKeeperClustering(options =>
-            // {
-            //     options.ConnectionString = siloSettings.ClusterConfig.ConnectionString;
-            // })
             silo.UseRedisClustering(options => options.ConfigurationOptions = new()
                 {
                     EndPoints = new EndPointCollection()

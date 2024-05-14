@@ -17,6 +17,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { IssueComponent } from '../../components/issue/issue.component';
 import { Subscription } from 'rxjs';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-poker-room',
@@ -41,7 +42,8 @@ export class PokerRoomComponent implements OnInit, OnDestroy {
     private roomService: RoomService,
     private dialog: Dialog,
     private notification: NotificationService,
-    public signalr: SignalrService
+    public signalr: SignalrService,
+    private sanitizer: DomSanitizer
   ) {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) return;
@@ -99,5 +101,15 @@ export class PokerRoomComponent implements OnInit, OnDestroy {
   }
   changeVoteState(stage: VoteStateChangeCommand) {
     this.roomService.changeVoteStage(this.pokerRoomId!, stage).subscribe();
+  }
+  replaceUrlsWithLinks(text: string): SafeHtml {
+    const urlPattern =
+      /((http|https|ftp):\/\/[\w?=&.\/-;#~%-]+(?![\w\s?&.\/;#~%"=-]*>))/g;
+    const replacement = (match: string) =>
+      `<a href="${match}" class='text-primary-blue-500 hover:text-primary-blue-300 underline' target="_blank">${match}</a>`;
+    const safeHtml = this.sanitizer.bypassSecurityTrustHtml(
+      text.replace(urlPattern, replacement)
+    );
+    return safeHtml;
   }
 }

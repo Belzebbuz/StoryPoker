@@ -1,5 +1,4 @@
 ﻿namespace StoryPoker.Client.Web.Api.Configurations;
-
 public class ClusterConfig
 {
     public required string ConnectionString { get; init; }

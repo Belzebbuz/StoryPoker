@@ -5,20 +5,12 @@ namespace StoryPoker.Client.Web.Api.Extensions;
 
 public static class ConfigExtensions
 {
-    internal static IHostBuilder AddConfigurations(this IHostBuilder host)
+    internal static void AddConfigurations(this ConfigurationManager configuration, string env)
     {
-        host.ConfigureAppConfiguration((context, config) =>
-        {
-            const string configurationsDirectory = "ConfigurationFiles";
-            var env = context.HostingEnvironment;
-            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"{configurationsDirectory}/serilog.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"{configurationsDirectory}/serilog.{env.EnvironmentName}.json", optional: true,
-                    reloadOnChange: true);
-        });
-
-        return host;
+        const string configurationsDirectory = "ConfigurationFiles";
+        configuration.AddJsonFile($"{configurationsDirectory}/serilog.json", optional: false, reloadOnChange: true);
+        configuration.AddJsonFile($"{configurationsDirectory}/serilog.{env}.json", optional: true,
+            reloadOnChange: true);
     }
 }
 public static class StaticLogger

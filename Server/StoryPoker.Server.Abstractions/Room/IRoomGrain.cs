@@ -1,9 +1,8 @@
-﻿using Orleans.Runtime;
-using StoryPoker.Server.Abstractions.Room.Models;
+﻿using StoryPoker.Server.Abstractions.Room.Models;
 
 namespace StoryPoker.Server.Abstractions.Room;
 
-public interface IRoomGrain : IGrainWithGuidKey, IObservableGrain<IRoomGrainObserver>
+public interface IRoomGrain : IGrainWithGuidKey
 {
     Task<RoomGrainState> GetAsync();
     Task<ResponseState> InitStateAsync(RoomRequest.CreateRoom request);
@@ -15,5 +14,4 @@ public interface IRoomGrain : IGrainWithGuidKey, IObservableGrain<IRoomGrainObse
     Task<ResponseState> SetPlayerIssueStoryPointAsync(RoomRequest.SetStoryPoint request);
     Task<ResponseState> StartVoteAsync();
     Task<ResponseState> StopVoteAsync();
-    Task<ResponseState<ICollection<Guid>>> GetPlayersAsync();
 }

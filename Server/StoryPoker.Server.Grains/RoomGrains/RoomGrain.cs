@@ -2,9 +2,9 @@
 using Orleans.Core;
 using Orleans.Runtime;
 using StoryPoker.Server.Abstractions;
+using StoryPoker.Server.Abstractions.Notifications;
 using StoryPoker.Server.Abstractions.Room;
 using StoryPoker.Server.Abstractions.Room.Models;
-using StoryPoker.Server.Grains.Base;
 using StoryPoker.Server.Grains.Constants;
 
 namespace StoryPoker.Server.Grains.RoomGrains;
@@ -12,8 +12,20 @@ namespace StoryPoker.Server.Grains.RoomGrains;
 internal sealed class RoomGrain(
     [PersistentState(stateName: "room-state", storageName: StorageConstants.PersistenceStorage)]
     IStorage<RoomGrainState> storageState,
-    ILogger<ObservableGrain<IRoomGrainObserver>> logger) : ObservableGrain<IRoomGrainObserver>(logger), IRoomGrain
+    ILogger<RoomGrain> logger) : Grain, IRoomGrain
 {
+    public override Task OnActivateAsync(CancellationToken cancellationToken)
+    {
+        logger.LogInformation("ACTIVATEDD GRRAAAAAAAAAAin");
+        return base.OnActivateAsync(cancellationToken);
+    }
+
+    public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("GRAAAAAAAAAIN DEAD");
+        return base.OnDeactivateAsync(reason, cancellationToken);
+    }
+
     public Task<RoomGrainState> GetAsync()
     {
         return Task.FromResult(storageState.State);
@@ -104,13 +116,6 @@ internal sealed class RoomGrain(
         return response;
     }
 
-    public Task<ResponseState<ICollection<Guid>>> GetPlayersAsync()
-    {
-        return !storageState.State.Instantiated
-            ? ResponseState<ICollection<Guid>>.Fail("Комната закрыта")
-            : ResponseState<ICollection<Guid>>.Success(storageState.State.Players.Keys.ToList());
-    }
-
     private async Task<ResponseState> SaveStateAsync(RoomGrainState stateScreen)
     {
         try
@@ -126,9 +131,11 @@ internal sealed class RoomGrain(
         }
     }
 
-    private ValueTask NotifyAsync()
+    private async Task NotifyAsync()
     {
-        ObserverManager.Notify(ob => ob.RoomStateChangedAsync(this.GetPrimaryKey(), storageState.State.Players.Any()));
-        return ValueTask.CompletedTask;
+        var notificator = GrainFactory.GetGrain<IRoomNotificationGrain>(this.GetPrimaryKey());
+        await notificator.NotifyAsync(
+            new RoomStateChangedNotification(this.GetPrimaryKey(),
+            storageState.State.Players.Any()));
     }
 }

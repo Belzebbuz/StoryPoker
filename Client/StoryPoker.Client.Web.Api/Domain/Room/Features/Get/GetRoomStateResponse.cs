@@ -14,24 +14,25 @@ public class GetRoomStateResponse
         Players = grainState.Players.Values
             .OrderBy(x => x.Order)
             .Select(
-                x =>
+                playerState =>
                 {
                     var playerVoted =
                         grainState.VotingIssueId.HasValue &&
                         grainState.Issues[grainState.VotingIssueId.Value].PlayerStoryPoints
-                            .ContainsKey(x.Id);
+                            .ContainsKey(playerState.Id);
                     var canShowValue =
-                        grainState.VotingIssueId.HasValue &&
-                        grainState.Issues[grainState.VotingIssueId.Value].Stage != VotingStage.Voting;
+                        (grainState.VotingIssueId.HasValue &&
+                        grainState.Issues[grainState.VotingIssueId.Value].Stage != VotingStage.Voting)
+                        || userId == playerState.Id;
                     int? playerVotePoint = playerVoted && canShowValue
-                        ? grainState.Issues[grainState.VotingIssueId!.Value].PlayerStoryPoints[x.Id]
+                        ? grainState.Issues[grainState.VotingIssueId!.Value].PlayerStoryPoints[playerState.Id]
                         : null;
-                    return new Player(x.Id, x.Name, x.IsSpectator,
+                    return new Player(playerState.Id, playerState.Name, playerState.IsSpectator,
                         new PlayerIssueStoryPoint(playerVoted, playerVotePoint));
                 }).ToArray().AsReadOnly();
         Issues = grainState.Issues
             .Values
-            .OrderByDescending(x => x.Order)
+            .OrderBy(x => x.Order)
             .Select(
                 issueState =>
                     new Issue(issueState.Id, issueState.Title, VotingStage.NotStarted, issueState.StoryPoints))

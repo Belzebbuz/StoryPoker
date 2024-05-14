@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  client:
+    build:
+      context: Client/StoryPoker.Client.Web.Api/.
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - silo
+      - redis
+    ports:
+      - "8015:8015"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Release
+      ClusterConfig__ConnectionString: redis-host
+
+  silo:
+    build:
+      context: Server/StoryPoker.Server.Silo/.
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - redis
+    ports:
+      - "8025:8025"
+    environment:
+      SiloConfig__ClusterConfig__ConnectionString: redis-host
+      SiloConfig__RedisPersistenceConfig__ConnectionString: redis-host
+
+  redis:
+    container_name: redis-persistence
+    hostname: redis-host
+    restart: always
+    image: redis:latest
+    ports:
+      - "6390:6379"

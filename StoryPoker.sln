@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoryPoker.Server.Silo", "S
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFiles", "SolutionFiles", "{D68C3C52-4ED3-4EC5-9D55-8C4F7A6ADD84}"
 	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+		build-angular.sh = build-angular.sh
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject

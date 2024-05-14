@@ -15,6 +15,7 @@ using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Observers;
 using StoryPoker.Client.Web.Api.Infrastructure.Hubs;
 using StoryPoker.Client.Web.Api.Infrastructure.Notifications;
+using StoryPoker.Server.Abstractions.Notifications;
 using StoryPoker.Server.Abstractions.Room;
 using StoryPoker.Server.Abstractions.Room.Models;
 
@@ -24,7 +25,8 @@ Log.Information("Server Booting Up...");
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-    builder.Host.AddConfigurations();
+
+    builder.Configuration.AddConfigurations(builder.Environment.EnvironmentName);
     builder.Host.UseSerilog((_, config) =>
     {
         config.WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
@@ -61,7 +63,7 @@ try
     builder.Services.AddTransient<NotificationHub>();
     builder.Services.AddSignalR();
     builder.Services.AddTransient<INotificationService, NotificationService>();
-    builder.Services.AddTransient<IRoomGrainObserver, RoomObserver>();
+    builder.Services.AddTransient<IRoomNotificationObserver, RoomNotificationObserver>();
     builder.Services.AddSingleton<IGrainSubscriptionBus, GrainsMessageChannel>();
     builder.Services.AddSingleton<IConnectionStorage, ConnectionStorage>();
     builder.Services.AddHostedService<GrainObserverService>();
@@ -73,6 +75,7 @@ try
     }
 
     app.UseCors();
+    app.UseHttpsRedirection();
     app.UseAuthentication();
     app.UseAuthorization();
     app.UseCurrentUser();

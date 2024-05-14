@@ -10,8 +10,8 @@
     "MinimumLevel": {
       "Default": "Information",
       "Override": {
-        "Microsoft": "Error",
-        "Microsoft.Hosting.Lifetime": "Information",
+        "Microsoft": "Information",
+        "Microsoft.Hosting.Lifetime": "Warning",
         "System": "Warning"
       }
     },

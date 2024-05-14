@@ -3,7 +3,10 @@ using StoryPoker.Client.Web.Api.Abstractions;
 
 namespace StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;
 
-public record GrainSubscription(Guid RoomId): IGrainSubscriptionMessage;
+public record GrainSubscription(Guid RoomId) : IGrainSubscriptionMessage
+{
+    public CancellationTokenSource ResubscribeStoppingToken { get; init; } = new ();
+}
 public record GrainUnsubscription(Guid RoomId): IGrainSubscriptionMessage;
 internal class GrainsMessageChannel : IGrainSubscriptionBus
 {

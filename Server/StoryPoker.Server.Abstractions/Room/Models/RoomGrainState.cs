@@ -105,6 +105,14 @@ public record RoomGrainState
             Stage = VotingStage.NotStarted
         };
         _issues.Add(issue.Id, issue);
+        if (VotingIssueId.HasValue)
+        {
+            var votingIssue = _issues[VotingIssueId.Value];
+            if(votingIssue.Stage != VotingStage.Voting)
+                VotingIssueId = issue.Id;
+            return;
+        }
+        VotingIssueId = issue.Id;
     }
 
     public ErrorOr<Success> SetCurrentIssue(Guid issueId)
@@ -133,7 +141,7 @@ public record RoomGrainState
         if (issue.Stage != VotingStage.Voting)
             return Error.Failure(description:"Голосование не начато");
         issue.PlayerStoryPoints[request.PlayerId] = request.StoryPoints;
-        return Result.Success;
+        return issue.PlayerStoryPoints.Count == _players.Count - 1 ? StopVote() : Result.Success;
     }
 
     public ErrorOr<Success> RemoveIssue(Guid issueId)
