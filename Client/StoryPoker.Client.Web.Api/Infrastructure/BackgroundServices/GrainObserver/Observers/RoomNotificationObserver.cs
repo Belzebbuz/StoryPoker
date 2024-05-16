@@ -49,6 +49,10 @@ public class RoomNotificationObserver(
                 await Task.Delay(TimeSpan.FromMinutes(5), token);
             }
         }
+        catch(Exception ex)
+        {
+            await subscriptionBus.EnqueueAsync(new GrainUnsubscription(roomId));
+        }
         finally
         {
             notificationGrain = grainFactory.GetGrain<IRoomNotificationGrain>(roomId);

@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SignalrService } from './core/signalr/services/signalr.service';
 import { AuthorizationService } from './core/authorization/services/authorization.service';
+import { NavBarComponent } from './features/navbar/components/nav-bar/nav-bar.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, NavBarComponent],
   templateUrl: './app.component.html',
 })
 export class AppComponent {

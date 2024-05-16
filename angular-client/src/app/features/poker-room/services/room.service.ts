@@ -8,6 +8,7 @@ import {
   GetRoomStateResponse,
   InitPokerRoomRequest,
   InitPokerRoomResponse,
+  IssueOrder,
   VoteStateChangeCommand,
 } from '../models/poker-room.model';
 
@@ -76,6 +77,41 @@ export class RoomService {
   deleteIssue(roomId: string, issueId: string) {
     return this.client.delete<boolean>(
       environment.baseApiUrl + '/room/' + roomId + '/issues/' + issueId
+    );
+  }
+
+  setNewSpectator(roomId: string, playerId: string) {
+    return this.client.put<boolean>(
+      environment.baseApiUrl +
+        '/room/' +
+        roomId +
+        '/players/spectator?playerId=' +
+        playerId,
+      {}
+    );
+  }
+
+  setIssuesOrder(roomId: string, order: IssueOrder) {
+    return this.client.put<boolean>(
+      environment.baseApiUrl +
+        '/room/' +
+        roomId +
+        '/issues/order?order=' +
+        order,
+      {}
+    );
+  }
+
+  setIssueNewOrder(roomId: string, issueId: string, newOrder: number) {
+    return this.client.put<boolean>(
+      environment.baseApiUrl +
+        '/room/' +
+        roomId +
+        '/issues/' +
+        issueId +
+        '/order?newOrder=' +
+        newOrder,
+      {}
     );
   }
 }

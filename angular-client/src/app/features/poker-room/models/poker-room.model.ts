@@ -17,6 +17,11 @@ export enum VoteStateChangeCommand {
   Stop = 1,
 }
 
+export enum IssueOrder {
+  Asc = 0,
+  Desc = 1,
+}
+
 export interface GetRoomStateResponse {
   playerId: string;
   isPlayerAdded: boolean;
@@ -25,6 +30,7 @@ export interface GetRoomStateResponse {
   isSpectator: boolean;
   players: PlayerState[];
   issues: IssueState[];
+  issueOrder: IssueOrder;
 }
 
 export interface PlayerState {
@@ -44,6 +50,7 @@ export interface IssueState {
   title: string;
   stage: VotingStage;
   storyPoints?: number;
+  order: number;
 }
 
 export enum VotingStage {

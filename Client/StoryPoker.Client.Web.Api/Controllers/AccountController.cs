@@ -2,9 +2,8 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using StoryPoker.Client.Web.Api.Middlewares.CurrentUser;
 
-namespace StoryPoker.Client.Web.Api.Domain.Account.Controllers;
+namespace StoryPoker.Client.Web.Api.Controllers;
 
 [Route("api/[controller]")]
 public class AccountController : ControllerBase

@@ -17,3 +17,9 @@ public enum VotingStage : byte
     Voting,
     VoteEnded
 }
+
+public enum IssueOrder : byte
+{
+    Asc,
+    Desc
+}

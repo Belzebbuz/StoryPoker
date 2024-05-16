@@ -4,11 +4,18 @@ import { RoomService } from '../../services/room.service';
 import { CommonModule } from '@angular/common';
 import { IconTrashComponent } from '../../../../core/icons/components/icon-trash/icon-trash.component';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { CdkDragHandle } from '@angular/cdk/drag-drop';
+import { IconArrowsPointingOutComponent } from '../../../../core/icons/components/icon-arrows-pointing-out/icon-arrows-pointing-out.component';
 @Component({
   selector: 'app-issue',
   standalone: true,
   templateUrl: './issue.component.html',
-  imports: [CommonModule, IconTrashComponent],
+  imports: [
+    CommonModule,
+    IconTrashComponent,
+    CdkDragHandle,
+    IconArrowsPointingOutComponent,
+  ],
 })
 export class IssueComponent implements OnInit {
   @Input() issue!: IssueState;

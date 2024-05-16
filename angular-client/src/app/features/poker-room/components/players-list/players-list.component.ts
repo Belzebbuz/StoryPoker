@@ -12,8 +12,9 @@ import { PlayerComponent } from '../player/player.component';
 })
 export class PlayersListComponent implements OnInit {
   @Input() players?: PlayerState[];
-  @Input() playerId?: string;
   @Input() votingIssue?: IssueState;
+  @Input() currentPlayerIsSpectator = false;
+  @Input() roomId!: string;
   constructor() {}
 
   ngOnInit() {}

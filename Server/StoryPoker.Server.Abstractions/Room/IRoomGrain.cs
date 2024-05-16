@@ -14,4 +14,7 @@ public interface IRoomGrain : IGrainWithGuidKey
     Task<ResponseState> SetPlayerIssueStoryPointAsync(RoomRequest.SetStoryPoint request);
     Task<ResponseState> StartVoteAsync();
     Task<ResponseState> StopVoteAsync();
+    Task<ResponseState> SetNewSpectatorAsync(Guid playerId);
+    Task<ResponseState> SetIssueListOrderAsync(IssueOrder order);
+    Task<ResponseState> SetIssueOrderAsync(Guid issueId, int newOrder);
 }

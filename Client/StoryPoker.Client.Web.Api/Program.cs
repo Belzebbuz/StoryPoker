@@ -8,7 +8,6 @@ using Serilog;
 using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Abstractions.Notifications;
 using StoryPoker.Client.Web.Api.Configurations;
-using StoryPoker.Client.Web.Api.Domain.Room.Features.Get;
 using StoryPoker.Client.Web.Api.Extensions;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;

@@ -18,6 +18,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { IssueComponent } from '../../components/issue/issue.component';
 import { Subscription } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { VotingComponent } from '../../components/voting/voting.component';
 
 @Component({
   selector: 'app-poker-room',
@@ -29,12 +30,12 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     IssueComponent,
     CommonModule,
     ReactiveFormsModule,
+    VotingComponent,
   ],
 })
 export class PokerRoomComponent implements OnInit, OnDestroy {
   roomState?: GetRoomStateResponse;
   pokerRoomId?: string;
-  votePoints = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
   subscriptions = new Subscription();
   constructor(
     private route: ActivatedRoute,
@@ -42,8 +43,7 @@ export class PokerRoomComponent implements OnInit, OnDestroy {
     private roomService: RoomService,
     private dialog: Dialog,
     private notification: NotificationService,
-    public signalr: SignalrService,
-    private sanitizer: DomSanitizer
+    public signalr: SignalrService
   ) {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) return;
@@ -93,23 +93,8 @@ export class PokerRoomComponent implements OnInit, OnDestroy {
         }
         this.signalr.subscribeToRoom(this.pokerRoomId!);
         this.roomState = response;
+        document.title = 'SP - ' + this.roomState.name;
       });
     this.subscriptions.add(subscription);
-  }
-  setPlayerStoryPoint(value: number) {
-    this.roomService.setPlayerStoryPoints(this.pokerRoomId!, value).subscribe();
-  }
-  changeVoteState(stage: VoteStateChangeCommand) {
-    this.roomService.changeVoteStage(this.pokerRoomId!, stage).subscribe();
-  }
-  replaceUrlsWithLinks(text: string): SafeHtml {
-    const urlPattern =
-      /((http|https|ftp):\/\/[\w?=&.\/-;#~%-]+(?![\w\s?&.\/;#~%"=-]*>))/g;
-    const replacement = (match: string) =>
-      `<a href="${match}" class='text-primary-blue-500 hover:text-primary-blue-300 underline' target="_blank">${match}</a>`;
-    const safeHtml = this.sanitizer.bypassSecurityTrustHtml(
-      text.replace(urlPattern, replacement)
-    );
-    return safeHtml;
   }
 }

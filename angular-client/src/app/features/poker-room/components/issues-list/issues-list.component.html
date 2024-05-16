@@ -1,14 +1,41 @@
-<div *ngIf="issues" class="flex flex-row md:flex-col gap-2 overflow-y-auto max-h-[95%]">
-  <span class="ml-2 max-md:hidden md:text-3xl">Задачи:</span>
-  <div *ngFor="let issue of issues">
-    <app-issue 
-    [spectator]="spectator"
-    [roomId]="roomId"
-    [issue]="issue"/>
+<div
+  *ngIf="issues"
+  class="flex flex-row md:flex-col gap-2 overflow-y-auto max-h-[95%]"
+>
+  <div class="flex flex-row items-center justify-between px-2">
+    <span class="max-md:hidden text-3xl select-none mb-2">Задачи:</span>
+    <div *ngIf="spectator">
+      <button
+        (click)="setIssueOrder(1)"
+        *ngIf="issueOrder == 0"
+        class="hover:text-gray-500"
+      >
+        <app-icon-bars-arrow-down [className]="'w-8 h-8'" />
+      </button>
+      <button
+        (click)="setIssueOrder(0)"
+        *ngIf="issueOrder == 1"
+        class="hover:text-gray-500"
+      >
+        <app-icon-bars-arrow-up [className]="'w-8 h-8'" />
+      </button>
     </div>
-    <script>
-      alert('AAAA')
-    </script>
+  </div>
+  <div [cdkDropListDisabled]="!spectator" cdkDropList class="drag-n-drop-list flex flex-col gap-2" (cdkDropListDropped)="drop($event)">
+    <div cdkDrag class="drag-n-drop-box" *ngFor="let issue of issues">
+      <app-issue
+        [spectator]="spectator"
+        [roomId]="roomId"
+        [issue]="issue"
+      />
+    </div>
+  </div>
 </div>
 
-<button *ngIf="spectator" (click)="addIssueDialog()" class="self-center mt-2 w-2/3 font-bold text-xl btn-primary">Добавить</button>
+<button
+  *ngIf="spectator"
+  (click)="addIssueDialog()"
+  class="self-center mt-2 w-2/3 font-bold text-xl btn-primary"
+>
+  Добавить
+</button>

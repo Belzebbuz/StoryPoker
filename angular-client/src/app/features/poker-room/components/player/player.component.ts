@@ -1,25 +1,44 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MatTooltip } from '@angular/material/tooltip';
 import {
   IssueState,
   PlayerState,
   VotingStage,
 } from '../../models/poker-room.model';
 import { IconEyeComponent } from '../../../../core/icons/components/icon-eye/icon-eye.component';
+import { RoomService } from '../../services/room.service';
 
 @Component({
   selector: 'app-player',
   standalone: true,
   templateUrl: './player.component.html',
-  imports: [CommonModule, ReactiveFormsModule, IconEyeComponent],
+  imports: [CommonModule, ReactiveFormsModule, IconEyeComponent, MatTooltip],
 })
 export class PlayerComponent implements OnInit {
   @Input() player!: PlayerState;
   @Input() votingIssue?: IssueState;
-  constructor() {}
+  @Input() currentPlayerIsSpectator = false;
+  @Input() roomId!: string;
+  constructor(private roomService: RoomService) {}
 
   ngOnInit() {}
+
+  setNewSpectator() {
+    this.roomService.setNewSpectator(this.roomId, this.player.id).subscribe();
+  }
+
+  showChangeSpectatorButton(): boolean {
+    if (this.votingIssue)
+      return (
+        this.votingIssue.stage != VotingStage.Voting &&
+        this.currentPlayerIsSpectator &&
+        !this.player.isSpectator
+      );
+    return this.currentPlayerIsSpectator && !this.player.isSpectator;
+  }
+
   getPointsState(): ShowPointsState {
     if (this.player.isSpectator) return ShowPointsState.Spectator;
     if (!this.votingIssue || this.votingIssue.stage == VotingStage.NotStarted)

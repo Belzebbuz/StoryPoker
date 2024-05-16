@@ -1,6 +1,6 @@
 ﻿using StoryPoker.Server.Abstractions.Room.Models;
 
-namespace StoryPoker.Client.Web.Api.Domain.Room.Features.AddPlayer;
+namespace StoryPoker.Client.Web.Api.Domain.Room.Models;
 
 public record AddPlayerRequest(string PlayerName)
 {

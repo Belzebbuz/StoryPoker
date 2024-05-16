@@ -14,7 +14,6 @@ public static class OrleansExtensions
         builder.UseOrleansClient(client =>
         {
             var orleansSettings = config.GetSection(nameof(ClusterConfig)).Get<ClusterConfig>();
-            Console.WriteLine(JsonSerializer.Serialize(orleansSettings));
             orleansSettings.ThrowIfNull("Отсутствуют настройки кластера");
             client
                 .UseRedisClustering(options => options.ConfigurationOptions = new()

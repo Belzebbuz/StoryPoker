@@ -1,5 +1,6 @@
-<div class="flex flex-col gap-2 border rounded bg-gray-50 border-gray-200 p-2">
-  <div [innerHTML]="replaceUrlsWithLinks(issue.title)" class="text-2xl break-words text-wrap"></div>
+<div class="relative flex flex-col gap-2 border rounded bg-gray-50 border-gray-200 p-2">
+  <app-icon-arrows-pointing-out *ngIf="spectator" cdkDragHandle class="absolute z-10 right-1 cursor-move text-gray-400 hover:text-gray-600" />
+  <div [innerHTML]="replaceUrlsWithLinks(issue.title)" class="text-2xl break-words text-wrap px-4"></div>
 
   <div class="flex flex-row items-center gap-4 border-t pt-2">
     <button
@@ -10,7 +11,7 @@
       Голосовать
     </button>
     <div class="flex flex-row gap-2 grow">
-      <span class="text-xl font-bold">Оценка: </span>
+      <span class="text-xl font-bold select-none">Оценка: </span>
       <div
         class="flex justify-center items-center bg-gray-200 text-black w-8 h-8 rounded-md"
       >

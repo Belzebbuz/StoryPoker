@@ -1,19 +1,22 @@
 ﻿using ErrorOr;
 using Newtonsoft.Json;
+using OneOf.Types;
+using Error = ErrorOr.Error;
+using Success = ErrorOr.Success;
 
 namespace StoryPoker.Server.Abstractions.Room.Models;
 
 [GenerateSerializer, Immutable]
 public record RoomGrainState
 {
-    [Id(4)] public required string Name { get; init; }
+    [Id(1)] public required string Name { get; init; }
     public IReadOnlyDictionary<Guid, PlayerState> Players => _players;
-    [Id(0)] private readonly Dictionary<Guid, PlayerState> _players = new();
+    [Id(2)] private readonly Dictionary<Guid, PlayerState> _players = new();
     public IReadOnlyDictionary<Guid, IssueState> Issues => _issues;
-    [Id(1)] private readonly Dictionary<Guid, IssueState> _issues = new();
-    [Id(2), JsonProperty] public Guid? VotingIssueId { get; private set; }
-    [Id(3), JsonProperty] public bool Instantiated { get; private set; }
-
+    [Id(3)] private readonly Dictionary<Guid, IssueState> _issues = new();
+    [Id(4), JsonProperty] public Guid? VotingIssueId { get; private set; }
+    [Id(5), JsonProperty] public bool Instantiated { get; private set; }
+    [Id(6), JsonProperty] public IssueOrder IssueOrderBy { get; private set; }
     public static RoomGrainState Init(RoomRequest.CreateRoom request)
     {
         var playerState = new PlayerState() { Name = request.PlayerName, IsSpectator = true, Id = request.PlayerId, Order = 1 };
@@ -25,6 +28,27 @@ public record RoomGrainState
         state.AddPlayer(playerState);
         return state;
     }
+
+    public ErrorOr<Success> SetIssuesNewOrder(Guid issueId, int newOrder)
+    {
+        if (!_issues.TryGetValue(issueId, out var issue))
+            return Error.Failure(description: "Нет такой задачи");
+        if (newOrder < 1 || newOrder > _issues.Count)
+            return Error.Failure(description: "Новый порядковый номер выходит за допустимые границы");
+        var oldOrder = issue.Order;
+        if (newOrder == oldOrder)
+            return Result.Success;
+        foreach (var (id, issueState) in _issues)
+        {
+            if (newOrder < oldOrder && issueState.Order >= newOrder && issueState.Order < oldOrder)
+                issueState.Order++;
+            else if (newOrder > oldOrder && issueState.Order <= newOrder && issueState.Order > oldOrder)
+                issueState.Order--;
+        }
+        issue.Order = newOrder;
+        return Result.Success;
+    }
+    public void SetIssueOrderBy(IssueOrder order) => IssueOrderBy = order;
 
     public ErrorOr<Success> AddNewPlayer(RoomRequest.AddPlayer request)
     {
@@ -59,6 +83,18 @@ public record RoomGrainState
         {
             _issues[VotingIssueId.Value].PlayerStoryPoints.Remove(player.Id);
         }
+    }
+
+    public ErrorOr<Success> SetNewSpectator(Guid playerId)
+    {
+        if (VotingIssueId.HasValue && _issues[VotingIssueId.Value].Stage == VotingStage.Voting)
+            return Error.Failure(description: "Нельзя поменять ведущего во время голосования");
+        var currentSpectator = _players.Values.FirstOrDefault(x => x.IsSpectator);
+        if(currentSpectator is not null)
+            currentSpectator.IsSpectator = false;
+        var nextSpectator = _players[playerId];
+        nextSpectator.IsSpectator = true;
+        return Result.Success;
     }
 
     private void AddPlayer(PlayerState player)
@@ -146,9 +182,10 @@ public record RoomGrainState
 
     public ErrorOr<Success> RemoveIssue(Guid issueId)
     {
-        if(VotingIssueId.HasValue && VotingIssueId.Value == issueId)
+        if(_issues[issueId].Stage == VotingStage.Voting)
             return Error.Failure(description: "Невозможно удалить предмет голосования");
         _issues.Remove(issueId);
+        VotingIssueId = null;
         return Result.Success;
     }
 }

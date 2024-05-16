@@ -14,18 +14,6 @@ internal sealed class RoomGrain(
     IStorage<RoomGrainState> storageState,
     ILogger<RoomGrain> logger) : Grain, IRoomGrain
 {
-    public override Task OnActivateAsync(CancellationToken cancellationToken)
-    {
-        logger.LogInformation("ACTIVATEDD GRRAAAAAAAAAAin");
-        return base.OnActivateAsync(cancellationToken);
-    }
-
-    public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
-    {
-        logger.LogInformation("GRAAAAAAAAAIN DEAD");
-        return base.OnDeactivateAsync(reason, cancellationToken);
-    }
-
     public Task<RoomGrainState> GetAsync()
     {
         return Task.FromResult(storageState.State);
@@ -38,6 +26,7 @@ internal sealed class RoomGrain(
             return ResponseState.Fail("Комната уже создана");
         storageState.State = RoomGrainState.Init(request);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната №'{this.GetPrimaryKey()}' -> успешно создана.");
         return response;
     }
 
@@ -48,6 +37,7 @@ internal sealed class RoomGrain(
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> добавлен игрок Id: {request.Id}");
         return response;
     }
     public async Task<ResponseState> RemovePlayerAsync(Guid playerId)
@@ -55,6 +45,7 @@ internal sealed class RoomGrain(
         var stateScreen = storageState.State with { };
         storageState.State.RemovePlayer(playerId);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> удален игрок Id: {playerId}");
         return response;
     }
 
@@ -63,6 +54,7 @@ internal sealed class RoomGrain(
         var stateScreen = storageState.State with { };
         storageState.State.AddIssue(request);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> добавлена задача.");
         return response;
     }
 
@@ -73,6 +65,7 @@ internal sealed class RoomGrain(
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> удалена задача.");
         return response;
     }
 
@@ -83,6 +76,7 @@ internal sealed class RoomGrain(
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> установлена новая текущая задача Id: {issueId}.");
         return response;
     }
 
@@ -93,6 +87,41 @@ internal sealed class RoomGrain(
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> " +
+                              $"игрок Id: {request.PlayerId} поставил оценку текущей задаче.");
+        if(storageState.State.Issues[storageState.State.VotingIssueId!.Value].Stage == VotingStage.VoteEnded)
+            logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> остановлено голосование по текущей задаче.");
+        return response;
+    }
+
+    public async Task<ResponseState> SetNewSpectatorAsync(Guid playerId)
+    {
+        var stateScreen = storageState.State with { };
+        var result = storageState.State.SetNewSpectator(playerId);
+        if (result.IsError)
+            return ResponseState.Fail(result.FirstError.Description);
+        var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> " +
+                              $"игрок Id: {playerId} установлен новым наблюдателем.");
+        return response;
+    }
+
+    public async Task<ResponseState> SetIssueListOrderAsync(IssueOrder order)
+    {
+        var stateScreen = storageState.State with { };
+        storageState.State.SetIssueOrderBy(order);
+        var response = await SaveStateAsync(stateScreen);
+        return response;
+    }
+
+    public async Task<ResponseState> SetIssueOrderAsync(Guid issueId, int newOrder)
+    {
+        var stateScreen = storageState.State with { };
+        var result = storageState.State.SetIssuesNewOrder(issueId,newOrder);
+        if (result.IsError)
+            return ResponseState.Fail(result.FirstError.Description);
+        var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> Задаче {issueId} установлен новый порядковый номер {newOrder}.");
         return response;
     }
 
@@ -103,6 +132,7 @@ internal sealed class RoomGrain(
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> началось голосование по текущей задаче.");
         return response;
     }
 
@@ -113,6 +143,7 @@ internal sealed class RoomGrain(
         if (result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> остановлено голосование по текущей задаче.");
         return response;
     }
 
@@ -127,6 +158,7 @@ internal sealed class RoomGrain(
         catch (Exception e)
         {
             storageState.State = stateScreen;
+            logger.LogError($"Комната Id: '{this.GetPrimaryKey()}' произошла ошибка при сохранении состояния.\n{e}");
             return ResponseState.Fail(e.Message);
         }
     }
