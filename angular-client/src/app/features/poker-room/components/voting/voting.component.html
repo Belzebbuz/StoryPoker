@@ -1,22 +1,43 @@
-<div class="flex flex-col">
+<div class="flex flex-col h-full">
   <h1 class="text-center text-4xl font-bold">{{ roomState.name }}</h1>
-  <span *ngIf="!roomState.votingIssue" class="text-2xl text-center">Задача не выбрана...</span>
+  <span *ngIf="!roomState.votingIssue" class="text-2xl text-center"
+    >Задача не выбрана...</span
+  >
   <div
     *ngIf="roomState.votingIssue"
-    class="flex flex-col justify-items-center gap-4"
+    class="flex flex-col justify-start gap-4 h-full"
   >
+  <!-- ЗАДАЧА -->
     <div
-      class="flex flex-col gap-2 self-center mt-4 rounded border border-gray-400 p-4 w-4/5"
+      class="flex flex-col gap-2 self-center mt-4 rounded border border-gray-300 p-4 w-4/5"
     >
       <span class="text-3xl font-bold">Задача:</span>
-      <div [innerHTML]="replaceUrlsWithLinks(roomState.votingIssue.title)" class="text-2xl break-words text-wrap"></div>
+      <div
+        [innerHTML]="replaceUrlsWithLinks(roomState.votingIssue.title)"
+        class="text-2xl break-words text-wrap"
+      ></div>
       <div class="flex flex-row items-center gap-4 border-t pt-2">
         <span class="text-xl font-bold">Оценка: </span>
-        <div class="flex justify-center items-center bg-gray-200 text-black w-10 h-10 rounded-md">
+        <div
+          matTooltip="Средняя"
+          [matTooltipClass]="'border bg-gray-50 rounded'"
+          class="flex justify-center items-center bg-gray-200 text-black w-10 h-10 rounded-md"
+        >
           <span class="font-bold">{{ roomState.votingIssue.storyPoints }}</span>
+        </div>
+        <div
+          matTooltip="Фибоначчи"
+          [matTooltipClass]="'border bg-gray-50 rounded'"
+          class="flex justify-center items-center bg-gray-200 text-black w-10 h-10 rounded-md"
+        >
+          <span class="font-bold">{{
+            roomState.votingIssue.fibonacciStoryPoints
+          }}</span>
         </div>
       </div>
     </div>
+
+  <!-- УПРАВЛЕНИЕ/СОСТОЯНИЕ -->
     <div *ngIf="roomState.isSpectator" class="self-center text-3xl font-bold">
       <button
         *ngIf="roomState.votingIssue.stage == 0"
@@ -32,13 +53,7 @@
       >
         Закончить голосование
       </button>
-      <button
-        *ngIf="roomState.votingIssue.stage == 2"
-        (click)="changeVoteState(0)"
-        class="btn-primary"
-      >
-        Начать голосование
-      </button>
+      <div *ngIf="roomState.votingIssue.stage == 2" class="">Голосование окончено.</div>
     </div>
 
     <div *ngIf="!roomState.isSpectator" class="self-center text-2xl">
@@ -52,11 +67,13 @@
         >Голосование закончилось.</span
       >
     </div>
+
+  <!-- КОЛОДА -->
     <div
-      *ngIf="!roomState.isSpectator && roomState.votingIssue.stage == 1"
-      class="flex justify-center py-4 border-y w-full animate-fade-in overflow-x-auto"
+      *ngIf="showDeck()"
+      class="grow content-center animate-fade-in"
     >
-      <div class="flex flex-row gap-4">
+      <div class="p-2 border-t flex flex-row flex-wrap gap-2 justify-center">
         <div
           (click)="setPlayerStoryPoint(value)"
           *ngFor="let value of votePoints"

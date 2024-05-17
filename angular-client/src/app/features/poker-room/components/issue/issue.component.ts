@@ -6,6 +6,7 @@ import { IconTrashComponent } from '../../../../core/icons/components/icon-trash
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CdkDragHandle } from '@angular/cdk/drag-drop';
 import { IconArrowsPointingOutComponent } from '../../../../core/icons/components/icon-arrows-pointing-out/icon-arrows-pointing-out.component';
+import { MatTooltip } from '@angular/material/tooltip';
 @Component({
   selector: 'app-issue',
   standalone: true,
@@ -15,6 +16,7 @@ import { IconArrowsPointingOutComponent } from '../../../../core/icons/component
     IconTrashComponent,
     CdkDragHandle,
     IconArrowsPointingOutComponent,
+    MatTooltip,
   ],
 })
 export class IssueComponent implements OnInit {

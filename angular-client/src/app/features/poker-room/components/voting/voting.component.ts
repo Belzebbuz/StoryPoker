@@ -3,15 +3,17 @@ import { Component, Input, OnInit } from '@angular/core';
 import {
   GetRoomStateResponse,
   VoteStateChangeCommand,
+  VotingStage,
 } from '../../models/poker-room.model';
 import { RoomService } from '../../services/room.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-voting',
   standalone: true,
   templateUrl: './voting.component.html',
-  imports: [CommonModule],
+  imports: [CommonModule, MatTooltip],
 })
 export class VotingComponent implements OnInit {
   @Input() roomState!: GetRoomStateResponse;
@@ -30,6 +32,15 @@ export class VotingComponent implements OnInit {
   changeVoteState(stage: VoteStateChangeCommand) {
     this.roomService.changeVoteStage(this.roomId!, stage).subscribe();
   }
+
+  showDeck(): boolean {
+    if (!this.roomState.votingIssue) return false;
+    return (
+      !this.roomState.isSpectator &&
+      this.roomState.votingIssue.stage != VotingStage.NotStarted
+    );
+  }
+
   replaceUrlsWithLinks(text: string): SafeHtml {
     const urlPattern =
       /((http|https|ftp):\/\/[\w?=&.\/-;#~%-]+(?![\w\s?&.\/;#~%"=-]*>))/g;

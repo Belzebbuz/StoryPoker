@@ -50,6 +50,7 @@ export interface IssueState {
   title: string;
   stage: VotingStage;
   storyPoints?: number;
+  fibonacciStoryPoints?: number;
   order: number;
 }
 

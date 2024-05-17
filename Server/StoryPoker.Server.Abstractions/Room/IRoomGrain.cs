@@ -1,10 +1,11 @@
 ﻿using StoryPoker.Server.Abstractions.Room.Models;
+using StoryPoker.Server.Abstractions.Room.Models.Enums;
 
 namespace StoryPoker.Server.Abstractions.Room;
 
 public interface IRoomGrain : IGrainWithGuidKey
 {
-    Task<RoomGrainState> GetAsync();
+    Task<RoomStateResponse> GetAsync(Guid playerId);
     Task<ResponseState> InitStateAsync(RoomRequest.CreateRoom request);
     Task<ResponseState> AddPlayerAsync(RoomRequest.AddPlayer request);
     Task<ResponseState> RemovePlayerAsync(Guid playerId);

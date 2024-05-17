@@ -46,7 +46,6 @@ export class IssuesListComponent implements OnInit {
     });
   }
   drop(event: CdkDragDrop<IssueState[]>) {
-    console.log(event);
     const oldIssueOrder = this.issues![event.currentIndex].order;
     const issue = this.issues![event.previousIndex].id;
     moveItemInArray(this.issues!, event.previousIndex, event.currentIndex);

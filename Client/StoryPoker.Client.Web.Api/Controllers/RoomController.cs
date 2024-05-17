@@ -8,6 +8,7 @@ using StoryPoker.Client.Web.Api.Domain.Room.Models;
 using StoryPoker.Server.Abstractions;
 using StoryPoker.Server.Abstractions.Room;
 using StoryPoker.Server.Abstractions.Room.Models;
+using StoryPoker.Server.Abstractions.Room.Models.Enums;
 
 namespace StoryPoker.Client.Web.Api.Controllers;
 
@@ -16,11 +17,11 @@ namespace StoryPoker.Client.Web.Api.Controllers;
 public class RoomController : BaseApiController
 {
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<GetRoomStateResponse>> GetStateAsync(Guid id)
+    public async Task<ActionResult<RoomStateResponse>> GetStateAsync(Guid id)
     {
-        var grainState = await GrainClient.GetGrain<IRoomGrain>(id).GetAsync();
         var userId = CurrentUser.UserId;
-        return Ok(new GetRoomStateResponse(userId, grainState));
+        var grainState = await GrainClient.GetGrain<IRoomGrain>(id).GetAsync(userId);
+        return Ok(grainState);
     }
 
     [HttpPost]

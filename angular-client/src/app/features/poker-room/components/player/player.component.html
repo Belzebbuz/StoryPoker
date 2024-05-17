@@ -1,26 +1,25 @@
 <div class="flex flex-row text-center gap-2">
   <div
-    class="w-11/12 flex row gap-2 items-center border border-gray-200 rounded p-2"
+    class="relative w-11/12 flex row gap-2 items-center border border-gray-200 rounded p-2"
   >
-    <span class="grow text-3xl font-bold text-wrap break-all">{{
-      player.name
-    }}</span>
-    
-  </div>
-  <div
-    ngSwitch="{{ getPointsState() }}"
-    class="relative flex items-center justify-center border border-gray-200 p-1 rounded-lg min-w-20 min-h-24"
-  >
-  <button
+    <button
       *ngIf="showChangeSpectatorButton()"
       (click)="setNewSpectator()"
       matTooltip="Назначить ведущим"
       [matTooltipPosition]="'right'"
-      [matTooltipClass]="'w-28 border bg-gray-50'"
+      [matTooltipClass]="'w-28 border bg-gray-50 rounded'"
       class="rounded-full text-gray-400 border p-1 hover:text-gray-500 hover:border-gray-300 absolute right-0.5 top-0.5"
     >
-      <app-icon-eye [className]="'w-4 h-4'" />
+      <app-icon-eye [className]="'w-5 h-5'" />
     </button>
+    <span class="grow text-2xl font-bold text-wrap break-all">{{
+      player.name
+    }}</span>
+  </div>
+  <div
+    ngSwitch="{{ getPointsState() }}"
+    class="flex items-center justify-center border border-gray-200 p-1 rounded-lg min-w-20 min-h-24"
+  >
     <span *ngSwitchCase="'0'" class="text-gray-400 text-4xl">X</span>
     <span *ngSwitchCase="'1'" class="text-gray-400 text-4xl">...</span>
     <div

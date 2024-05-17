@@ -5,18 +5,23 @@ using StoryPoker.Server.Abstractions;
 using StoryPoker.Server.Abstractions.Notifications;
 using StoryPoker.Server.Abstractions.Room;
 using StoryPoker.Server.Abstractions.Room.Models;
+using StoryPoker.Server.Abstractions.Room.Models.Enums;
+using StoryPoker.Server.Grains.Abstractions;
 using StoryPoker.Server.Grains.Constants;
+using StoryPoker.Server.Grains.RoomGrains.Models;
 
 namespace StoryPoker.Server.Grains.RoomGrains;
 
 internal sealed class RoomGrain(
     [PersistentState(stateName: "room-state", storageName: StorageConstants.PersistenceStorage)]
-    IStorage<RoomGrainState> storageState,
-    ILogger<RoomGrain> logger) : Grain, IRoomGrain
+    IStorage<InternalRoom> storageState,
+    ILogger<RoomGrain> logger,
+    IRoomStateResponseFactory responseFactory) : Grain, IRoomGrain
 {
-    public Task<RoomGrainState> GetAsync()
+    public Task<RoomStateResponse> GetAsync(Guid playerId)
     {
-        return Task.FromResult(storageState.State);
+        var response = responseFactory.ToPlayerResponse(playerId, storageState.State);
+        return Task.FromResult(response);
     }
 
     public async Task<ResponseState> InitStateAsync(RoomRequest.CreateRoom request)
@@ -24,7 +29,7 @@ internal sealed class RoomGrain(
         var stateScreen = storageState.State with { };
         if (storageState.State.Instantiated)
             return ResponseState.Fail("Комната уже создана");
-        storageState.State = RoomGrainState.Init(request);
+        storageState.State = InternalRoom.Init(request);
         var response = await SaveStateAsync(stateScreen);
         logger.LogInformation($"Комната №'{this.GetPrimaryKey()}' -> успешно создана.");
         return response;
@@ -111,6 +116,7 @@ internal sealed class RoomGrain(
         var stateScreen = storageState.State with { };
         storageState.State.SetIssueOrderBy(order);
         var response = await SaveStateAsync(stateScreen);
+        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> установлен новый порядок сортировки задач.");
         return response;
     }
 
@@ -147,12 +153,11 @@ internal sealed class RoomGrain(
         return response;
     }
 
-    private async Task<ResponseState> SaveStateAsync(RoomGrainState stateScreen)
+    private async Task<ResponseState> SaveStateAsync(InternalRoom stateScreen)
     {
         try
         {
             await storageState.WriteStateAsync();
-            await NotifyAsync();
             return ResponseState.Success();
         }
         catch (Exception e)
@@ -160,6 +165,10 @@ internal sealed class RoomGrain(
             storageState.State = stateScreen;
             logger.LogError($"Комната Id: '{this.GetPrimaryKey()}' произошла ошибка при сохранении состояния.\n{e}");
             return ResponseState.Fail(e.Message);
+        }
+        finally
+        {
+            await NotifyAsync();
         }
     }
 

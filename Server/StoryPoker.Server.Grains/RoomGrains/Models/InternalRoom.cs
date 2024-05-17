@@ -1,26 +1,24 @@
 ﻿using ErrorOr;
 using Newtonsoft.Json;
-using OneOf.Types;
-using Error = ErrorOr.Error;
-using Success = ErrorOr.Success;
+using StoryPoker.Server.Abstractions.Room.Models;
+using StoryPoker.Server.Abstractions.Room.Models.Enums;
 
-namespace StoryPoker.Server.Abstractions.Room.Models;
+namespace StoryPoker.Server.Grains.RoomGrains.Models;
 
-[GenerateSerializer, Immutable]
-public record RoomGrainState
+public record InternalRoom
 {
-    [Id(1)] public required string Name { get; init; }
-    public IReadOnlyDictionary<Guid, PlayerState> Players => _players;
-    [Id(2)] private readonly Dictionary<Guid, PlayerState> _players = new();
-    public IReadOnlyDictionary<Guid, IssueState> Issues => _issues;
-    [Id(3)] private readonly Dictionary<Guid, IssueState> _issues = new();
-    [Id(4), JsonProperty] public Guid? VotingIssueId { get; private set; }
-    [Id(5), JsonProperty] public bool Instantiated { get; private set; }
-    [Id(6), JsonProperty] public IssueOrder IssueOrderBy { get; private set; }
-    public static RoomGrainState Init(RoomRequest.CreateRoom request)
+    [JsonProperty] public string Name { get; private set; } = string.Empty;
+    public IReadOnlyDictionary<Guid, InternalPlayer> Players => _players;
+    private readonly Dictionary<Guid, InternalPlayer> _players = new();
+    public IReadOnlyDictionary<Guid, InternalIssue> Issues => _issues;
+    private readonly Dictionary<Guid, InternalIssue> _issues = new();
+    [JsonProperty] public Guid? VotingIssueId { get; private set; }
+    [JsonProperty] public bool Instantiated { get; private set; }
+    [JsonProperty] public IssueOrder IssueOrderBy { get; private set; }
+    public static InternalRoom Init(RoomRequest.CreateRoom request)
     {
-        var playerState = new PlayerState() { Name = request.PlayerName, IsSpectator = true, Id = request.PlayerId, Order = 1 };
-        var state = new RoomGrainState()
+        var playerState = new InternalPlayer() { Name = request.PlayerName, IsSpectator = true, Id = request.PlayerId, Order = 1 };
+        var state = new InternalRoom()
         {
             Name = request.RoomName,
             Instantiated = true
@@ -52,11 +50,11 @@ public record RoomGrainState
 
     public ErrorOr<Success> AddNewPlayer(RoomRequest.AddPlayer request)
     {
-        var playerExist =_players.ContainsKey(request.Id);
+        var playerExist = _players.ContainsKey(request.Id);
         if (playerExist)
             return Result.Success;
         var order = _players.Count != 0 ? _players.Values.Max(x => x.Order) + 1 : 1;
-        var player = new PlayerState()
+        var player = new InternalPlayer()
         {
             Id = request.Id,
             Name = request.Name,
@@ -97,7 +95,7 @@ public record RoomGrainState
         return Result.Success;
     }
 
-    private void AddPlayer(PlayerState player)
+    private void AddPlayer(InternalPlayer player)
     {
         _players.Add(player.Id, player);
     }
@@ -105,35 +103,24 @@ public record RoomGrainState
     public ErrorOr<Success> StartVote()
     {
         if (!VotingIssueId.HasValue)
-            return Error.Failure(description: "Не выбран объект голосвания");
-        _issues[VotingIssueId.Value].PlayerStoryPoints.Clear();
+            return Error.Failure(description: "Не выбран объект голосования");
         var issue = _issues[VotingIssueId.Value];
-        if (issue.Stage == VotingStage.Voting)
-            return Error.Failure(description: "Голосвание уже началось");
-        issue.Stage = VotingStage.Voting;
-        return Result.Success;
+        return issue.StartVote();
     }
 
     public ErrorOr<Success> StopVote()
     {
         if (!VotingIssueId.HasValue)
-            return Error.Failure(description: "Не выбран объект голосвания");
+            return Error.Failure(description: "Не выбран объект голосования");
 
         var issue = _issues[VotingIssueId.Value];
-        if (issue.Stage != VotingStage.Voting)
-            return Error.Failure(description: "Голосование не начато");
-
-        issue.Stage = VotingStage.VoteEnded;
-        issue.StoryPoints = issue.PlayerStoryPoints.Count == 0
-            ? null
-            : (int)Math.Round(issue.PlayerStoryPoints.Average(x => x.Value), MidpointRounding.AwayFromZero);
-        return Result.Success;
+        return issue.StopVote();
     }
 
     public void AddIssue(RoomRequest.AddIssue addIssueRequest)
     {
         var order = _issues.Count != 0 ? _issues.Values.Max(x => x.Order) + 1 : 1;
-        var issue = new IssueState()
+        var issue = new InternalIssue()
         {
             Id = Guid.NewGuid(),
             Title = addIssueRequest.Title,
@@ -174,9 +161,14 @@ public record RoomGrainState
         if (!VotingIssueId.HasValue)
             return Error.Failure(description:"Не выбран объект голосования");
         var issue = _issues[VotingIssueId.Value];
-        if (issue.Stage != VotingStage.Voting)
+        if (issue.Stage == VotingStage.NotStarted)
             return Error.Failure(description:"Голосование не начато");
         issue.PlayerStoryPoints[request.PlayerId] = request.StoryPoints;
+        if (issue.Stage == VotingStage.VoteEnded)
+        {
+            issue.RecalculateStoryPoints();
+            return Result.Success;
+        }
         return issue.PlayerStoryPoints.Count == _players.Count - 1 ? StopVote() : Result.Success;
     }
 
@@ -185,8 +177,14 @@ public record RoomGrainState
         if(_issues[issueId].Stage == VotingStage.Voting)
             return Error.Failure(description: "Невозможно удалить предмет голосования");
         _issues.Remove(issueId);
-        VotingIssueId = null;
+        if(VotingIssueId.HasValue && VotingIssueId.Value == issueId)
+            VotingIssueId = null;
+        var order = 1;
+        foreach (var issueState in _issues.Values.OrderBy(x => x.Order))
+        {
+            issueState.Order = order;
+            order++;
+        }
         return Result.Success;
     }
 }
-
