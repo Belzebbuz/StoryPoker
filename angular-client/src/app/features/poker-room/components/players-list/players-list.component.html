@@ -2,6 +2,7 @@
   <span class="ml-2 max-md:hidden md:text-3xl">Участники:</span>
   <div *ngFor="let player of players">
    <app-player 
+   [isCurrentPlayer]="player.id == currentPlayerId"
    [roomId]="roomId"
    [currentPlayerIsSpectator]="currentPlayerIsSpectator"
    [votingIssue]="votingIssue" 

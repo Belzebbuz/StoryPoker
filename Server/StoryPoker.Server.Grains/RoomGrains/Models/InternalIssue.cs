@@ -37,26 +37,26 @@ public record InternalIssue
     public void RecalculateStoryPoints()
     {
         StoryPoints = CalculateStoryPoints();
-        FibonacciStoryPoints = CalculateFibonacciStoryPoints();
+        FibonacciStoryPoints = CalculateFibonacciStoryPoints(StoryPoints);
     }
 
     private float? CalculateStoryPoints() => PlayerStoryPoints.Count == 0
         ? null
         : (float)Math.Round(PlayerStoryPoints.Average(x => x.Value),1);
 
-    private int? CalculateFibonacciStoryPoints()
+    private static int? CalculateFibonacciStoryPoints(float? storyPoints)
     {
-        if (!StoryPoints.HasValue)
+        if (!storyPoints.HasValue)
             return null;
-        var fibonacciSequence = GenerateFibonacciSequence(StoryPoints.Value);
-        foreach (var fib in fibonacciSequence.Where(fib => fib >= StoryPoints.Value))
+        var fibonacciSequence = GenerateFibonacciSequence(storyPoints.Value);
+        foreach (var fib in fibonacciSequence.Where(fib => fib >= storyPoints.Value))
         {
             return fib;
         }
 
         return fibonacciSequence[^1];
     }
-    static IList<int> GenerateFibonacciSequence(double maxNumber)
+    private static IList<int> GenerateFibonacciSequence(float maxNumber)
     {
         var fibonacci = new List<int> { 0, 1 };
         while (true)

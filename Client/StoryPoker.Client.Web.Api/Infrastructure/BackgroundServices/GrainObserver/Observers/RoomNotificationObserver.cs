@@ -12,7 +12,7 @@ public class RoomNotificationObserver(
     INotificationService notificationService,
     IGrainSubscriptionBus subscriptionBus,
     IGrainFactory grainFactory)
-    : IRoomNotificationObserver, IRoomObserverSubscriber
+    : IRoomNotificationObserver, IRoomNotificationGrainSubscriber
 {
     private async Task RoomStateChangedAsync(RoomStateChangedNotification notification)
     {

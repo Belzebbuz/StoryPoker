@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddGrainObserving(this IServiceCollection services)
     {
         services.AddScoped<IRoomNotificationObserver, RoomNotificationObserver>();
-        services.AddScoped<IRoomObserverSubscriber, RoomNotificationObserver>();
+        services.AddScoped<IRoomNotificationGrainSubscriber, RoomNotificationObserver>();
 
         services.AddSingleton<IGrainSubscriptionBus, GrainsSubscriptionMessageChannel>();
         services.AddHostedService<GrainObserverService>();

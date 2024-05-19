@@ -11,6 +11,7 @@
   >
     <!-- ИГРОКИ -->
     <app-players-list
+      [currentPlayerId]="roomState.playerId"
       [currentPlayerIsSpectator]="roomState.isSpectator"
       [votingIssue]="roomState.votingIssue"
       [roomId]="pokerRoomId"

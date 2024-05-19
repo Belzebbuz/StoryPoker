@@ -2,7 +2,6 @@
 using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Abstractions.Observers;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;
-using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Observers;
 using StoryPoker.Server.Abstractions.Notifications;
 
 namespace StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver;
@@ -10,7 +9,6 @@ namespace StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObser
 public class GrainObserverService(
     IGrainSubscriptionBus subscriptionBus,
     IServiceScopeFactory scopeFactory,
-    IGrainFactory grainFactory,
     ILogger<GrainObserverService> logger) : BackgroundService
 {
     private readonly ConcurrentDictionary<Guid, (GrainSubscription subscription, IGrainObserver observer)> _activeSubscribes = new();
@@ -32,7 +30,7 @@ public class GrainObserverService(
     {
         if(!_activeSubscribes.TryRemove(unsubscribe.RoomId, out var observer))
         {
-            logger.LogWarning($"Подписка для комнаты №{unsubscribe.RoomId} не найдена.");
+            logger.LogInformation($"Подписка для комнаты №{unsubscribe.RoomId} не найдена.");
             return;
         }
         await observer.subscription.ResubscribeStoppingToken.CancelAsync();
@@ -41,13 +39,13 @@ public class GrainObserverService(
 
     private async Task SubscribeGrainAsync(GrainSubscription subscribe)
     {
+        if (_activeSubscribes.ContainsKey(subscribe.RoomId))
+        {
+            logger.LogInformation($"RoomId: {subscribe.RoomId} подписка уже создана");
+            return;
+        }
         try
         {
-            if (_activeSubscribes.ContainsKey(subscribe.RoomId))
-            {
-                logger.LogInformation($"RoomId: {subscribe.RoomId} подписка уже создана");
-                return;
-            }
             await _semaphore.WaitAsync();
             if (_activeSubscribes.ContainsKey(subscribe.RoomId))
             {
@@ -56,7 +54,7 @@ public class GrainObserverService(
             }
 
             await using var scope = scopeFactory.CreateAsyncScope();
-            var subscriber = scope.ServiceProvider.GetRequiredService<IRoomObserverSubscriber>();
+            var subscriber = scope.ServiceProvider.GetRequiredService<IRoomNotificationGrainSubscriber>();
             var _ = subscriber.StartAsync(subscribe.RoomId, subscribe.ResubscribeStoppingToken.Token);
             var observer = scope.ServiceProvider.GetRequiredService<IRoomNotificationObserver>();
             _activeSubscribes.TryAdd(subscribe.RoomId, new(subscribe, observer));

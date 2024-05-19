@@ -1,5 +1,6 @@
 <div class="flex flex-row text-center gap-2">
   <div
+    [ngClass]="{'border-gray-400':isCurrentPlayer}"
     class="relative w-11/12 flex row gap-2 items-center border border-gray-200 rounded p-2"
   >
     <button
@@ -17,6 +18,7 @@
     }}</span>
   </div>
   <div
+    [ngClass]="{'border-gray-400':isCurrentPlayer}"
     ngSwitch="{{ getPointsState() }}"
     class="flex items-center justify-center border border-gray-200 p-1 rounded-lg min-w-20 min-h-24"
   >

@@ -18,6 +18,7 @@ import { RoomService } from '../../services/room.service';
 })
 export class PlayerComponent implements OnInit {
   @Input() player!: PlayerState;
+  @Input() isCurrentPlayer!: boolean;
   @Input() votingIssue?: IssueState;
   @Input() currentPlayerIsSpectator = false;
   @Input() roomId!: string;

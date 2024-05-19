@@ -12,6 +12,7 @@ import { PlayerComponent } from '../player/player.component';
 })
 export class PlayersListComponent implements OnInit {
   @Input() players?: PlayerState[];
+  @Input() currentPlayerId!: string;
   @Input() votingIssue?: IssueState;
   @Input() currentPlayerIsSpectator = false;
   @Input() roomId!: string;

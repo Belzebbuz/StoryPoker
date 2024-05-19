@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import {
   INotificationMessage,
   ISignalrNotification,
-  NotifiactionType as MessageType,
-  RoomStateUpdatedMessage,
+  NotifiactionType,
 } from '../models/signalr.models';
 import { BehaviorSubject, Observable, filter, map } from 'rxjs';
 
@@ -12,19 +11,18 @@ import { BehaviorSubject, Observable, filter, map } from 'rxjs';
 })
 export class NotificationService {
   private notifications: {
-    [key in MessageType]: BehaviorSubject<any>;
+    [key in NotifiactionType]: BehaviorSubject<any>;
   };
   constructor() {
     this.notifications = {
-      [MessageType.RoomStateUpdated]:
-        new BehaviorSubject<RoomStateUpdatedMessage>({
-          messageType: MessageType.RoomStateUpdated,
-          value: '',
+      [NotifiactionType.RoomStateUpdated]:
+        new BehaviorSubject<ISignalrNotification>({
+          messageType: NotifiactionType.RoomStateUpdated,
         }),
     };
   }
 
-  public getObservable<T>(messageType: MessageType): Observable<T> {
+  public getObservable<T>(messageType: NotifiactionType): Observable<T> {
     return this.notifications[messageType].pipe(
       filter((message) => {
         const typedMessage = message as INotificationMessage<T>;
