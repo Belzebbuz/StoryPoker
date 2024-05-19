@@ -8,7 +8,7 @@ public record GrainSubscription(Guid RoomId) : IGrainSubscriptionMessage
     public CancellationTokenSource ResubscribeStoppingToken { get; init; } = new ();
 }
 public record GrainUnsubscription(Guid RoomId): IGrainSubscriptionMessage;
-internal class GrainsMessageChannel : IGrainSubscriptionBus
+internal class GrainsSubscriptionMessageChannel : IGrainSubscriptionBus
 {
     private readonly Channel<IGrainSubscriptionMessage> _queue =
         Channel.CreateBounded<IGrainSubscriptionMessage>(1);

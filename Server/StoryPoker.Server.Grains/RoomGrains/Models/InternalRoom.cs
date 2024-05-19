@@ -2,10 +2,11 @@
 using Newtonsoft.Json;
 using StoryPoker.Server.Abstractions.Room.Models;
 using StoryPoker.Server.Abstractions.Room.Models.Enums;
+using StoryPoker.Server.Abstractions.Room.StateAbstractions;
 
 namespace StoryPoker.Server.Grains.RoomGrains.Models;
 
-public record InternalRoom
+public record InternalRoom : IRoomState
 {
     [JsonProperty] public string Name { get; private set; } = string.Empty;
     public IReadOnlyDictionary<Guid, InternalPlayer> Players => _players;
@@ -46,7 +47,11 @@ public record InternalRoom
         issue.Order = newOrder;
         return Result.Success;
     }
-    public void SetIssueOrderBy(IssueOrder order) => IssueOrderBy = order;
+    public ErrorOr<Success> SetIssueOrderBy(IssueOrder order)
+    {
+        IssueOrderBy = order;
+        return Result.Success;
+    }
 
     public ErrorOr<Success> AddNewPlayer(RoomRequest.AddPlayer request)
     {
@@ -65,11 +70,11 @@ public record InternalRoom
         return Result.Success;
     }
 
-    public void RemovePlayer(Guid id)
+    public ErrorOr<Success> RemovePlayer(Guid id)
     {
         var player = _players.GetValueOrDefault(id);
         if(player is null)
-            return;
+            return Result.Success;
         _players.Remove(id);
         if (player.IsSpectator && _players.Count != 0)
         {
@@ -81,6 +86,8 @@ public record InternalRoom
         {
             _issues[VotingIssueId.Value].PlayerStoryPoints.Remove(player.Id);
         }
+
+        return Result.Success;
     }
 
     public ErrorOr<Success> SetNewSpectator(Guid playerId)
@@ -117,7 +124,7 @@ public record InternalRoom
         return issue.StopVote();
     }
 
-    public void AddIssue(RoomRequest.AddIssue addIssueRequest)
+    public ErrorOr<Success> AddIssue(RoomRequest.AddIssue addIssueRequest)
     {
         var order = _issues.Count != 0 ? _issues.Values.Max(x => x.Order) + 1 : 1;
         var issue = new InternalIssue()
@@ -133,9 +140,10 @@ public record InternalRoom
             var votingIssue = _issues[VotingIssueId.Value];
             if(votingIssue.Stage != VotingStage.Voting)
                 VotingIssueId = issue.Id;
-            return;
+            return Result.Success;
         }
         VotingIssueId = issue.Id;
+        return Result.Success;
     }
 
     public ErrorOr<Success> SetCurrentIssue(Guid issueId)

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Abstractions.Notifications;
+using StoryPoker.Client.Web.Api.Abstractions.Observers;
 using StoryPoker.Client.Web.Api.Configurations;
 using StoryPoker.Client.Web.Api.Extensions;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver;
@@ -32,12 +33,7 @@ try
             .ReadFrom.Configuration(builder.Configuration);
     });
     builder.Host.AddOrleansClient(builder.Configuration);
-    builder.Services.AddAuthorization();
-    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-        .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, configure =>
-        {
-            configure.LoginPath = "/api/account/login";
-        });
+    builder.Services.AddAuth();
     builder.Services.AddSwaggerGen();
     builder.Services.AddControllers()
         .ConfigureApiBehaviorOptions(config =>
@@ -50,22 +46,13 @@ try
                 );
             };
         });
+
     builder.Services.Configure<WebHookConfig>(builder.Configuration.GetSection(nameof(WebHookConfig)));
+    builder.Services.AddDefaultCorsPolicy("CorsPolicy");
     builder.Services.AddCurrentUser();
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("CorsPolicy", builder => builder
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials());
-    });
-    builder.Services.AddTransient<NotificationHub>();
-    builder.Services.AddSignalR();
-    builder.Services.AddTransient<INotificationService, NotificationService>();
-    builder.Services.AddTransient<IRoomNotificationObserver, RoomNotificationObserver>();
-    builder.Services.AddSingleton<IGrainSubscriptionBus, GrainsMessageChannel>();
-    builder.Services.AddSingleton<IConnectionStorage, ConnectionStorage>();
-    builder.Services.AddHostedService<GrainObserverService>();
+    builder.Services.AddClientNotifications();
+    builder.Services.AddGrainObserving();
+
     var app = builder.Build();
     if (app.Environment.IsDevelopment())
     {
@@ -73,7 +60,7 @@ try
         app.UseSwaggerUI();
     }
 
-    app.UseCors();
+    app.UseCors("CorsPolicy");
     app.UseHttpsRedirection();
     app.UseAuthentication();
     app.UseAuthorization();

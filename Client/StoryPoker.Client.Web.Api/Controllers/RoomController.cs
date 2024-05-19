@@ -5,8 +5,8 @@ using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Attributes;
 using StoryPoker.Client.Web.Api.Configurations;
 using StoryPoker.Client.Web.Api.Domain.Room.Models;
-using StoryPoker.Server.Abstractions;
 using StoryPoker.Server.Abstractions.Room;
+using StoryPoker.Server.Abstractions.Room.Commands;
 using StoryPoker.Server.Abstractions.Room.Models;
 using StoryPoker.Server.Abstractions.Room.Models.Enums;
 
@@ -16,6 +16,7 @@ namespace StoryPoker.Client.Web.Api.Controllers;
 [RoomExistFilter]
 public class RoomController : BaseApiController
 {
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RoomStateResponse>> GetStateAsync(Guid id)
     {
@@ -46,8 +47,10 @@ public class RoomController : BaseApiController
         AddPlayerRequest request)
     {
         var userId = CurrentUser.UserId;
-        var internalRequest = request.ToInternal(userId);
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).AddPlayerAsync(internalRequest);
+        var internalCommand = request.ToCommand(userId);
+        var result = await GrainClient
+            .GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(internalCommand);
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
@@ -56,7 +59,9 @@ public class RoomController : BaseApiController
         Guid id,
         [FromQuery] Guid playerId)
     {
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).SetNewSpectatorAsync(playerId);
+        var result = await GrainClient
+            .GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(new SetNewSpectatorCommand(playerId));
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
@@ -64,55 +69,63 @@ public class RoomController : BaseApiController
     public async Task<ActionResult> RemovePlayerAsync(Guid id)
     {
         var userId = CurrentUser.UserId;
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).RemovePlayerAsync(userId);
+        var result = await GrainClient
+            .GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(new RemovePlayerCommand(userId));
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpPut("{id:guid}/vote-stage")]
-    public async Task<ActionResult> StopVoteAsync(Guid id, [FromQuery]VoteStageChangeCommand stage)
+    public async Task<ActionResult> StopVoteAsync(Guid id, [FromQuery]VoteStageChangeType stage)
     {
-        var result = stage switch
-        {
-            VoteStageChangeCommand.Start => await GrainClient.GetGrain<IRoomGrain>(id).StartVoteAsync(),
-            VoteStageChangeCommand.Stop => await GrainClient.GetGrain<IRoomGrain>(id).StopVoteAsync(),
-            _ => ResponseState.Fail("Неверная команда")
-        };
+        var result = await GrainClient.GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(new ChangeVotingStageCommand(stage));
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpPost("{id:guid}/issues")]
     public async Task<ActionResult> AddIssuesAsync(Guid id, AddIssueRequest request)
     {
-        var internalRequest = new RoomRequest.AddIssue(request.Title);
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).AddIssueAsync(internalRequest);
+        var internalRequest = new AddIssueCommand(request.Title);
+        var result = await GrainClient
+            .GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(internalRequest);
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpPut("{id:guid}/issues/order")]
     public async Task<ActionResult> SetIssueOrderbyAsync(Guid id, [FromQuery]IssueOrder order)
     {
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).SetIssueListOrderAsync(order);
+        var result = await GrainClient
+            .GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(new SetIssueListOrderCommand(order));
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpPut("{id:guid}/issues/{issueId:guid}/order")]
     public async Task<ActionResult> SetIssueNewOrderAsync(Guid id, [FromRoute] Guid issueId, [FromQuery] int newOrder)
     {
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).SetIssueOrderAsync(issueId, newOrder);
+        var result = await GrainClient
+            .GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(new SetIssueOrderCommand(issueId, newOrder));
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpDelete("{id:guid}/issues/{issueId:guid}")]
     public async Task<ActionResult> AddIssuesAsync(Guid id,Guid issueId)
     {
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).RemoveIssueAsync(issueId);
+        var result = await GrainClient
+            .GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(new RemoveIssueCommand(issueId));
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpPut("{id:guid}/current-issue")]
     public async Task<ActionResult> SetCurrenIssueAsync(Guid id, [FromQuery] Guid issueId)
     {
-        var result = await GrainClient.GetGrain<IRoomGrain>(id).SetCurrentIssueAsync(issueId);
+        var result = await GrainClient
+            .GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(new SetCurrentIssueCommand(issueId));
         return result.IsSuccess ? Ok(): BadRequest(result.Error);
     }
 
@@ -121,9 +134,10 @@ public class RoomController : BaseApiController
         [FromQuery] int storyPoint)
     {
         var userId = CurrentUser.UserId;
-        var request = new RoomRequest.SetStoryPoint(userId, storyPoint);
-        var result = await GrainClient.GetGrain<IRoomGrain>(id)
-            .SetPlayerIssueStoryPointAsync(request);
+        var request = new SetPlayerIssueStoryPointCommand(userId, storyPoint);
+        var result = await GrainClient
+            .GetGrain<IRoomGrain>(id)
+            .ExecuteCommandAsync(request);
         return result.IsSuccess ? Ok(): BadRequest(result.Error);
     }
 }

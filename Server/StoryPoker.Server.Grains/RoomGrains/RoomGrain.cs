@@ -4,8 +4,8 @@ using Orleans.Runtime;
 using StoryPoker.Server.Abstractions;
 using StoryPoker.Server.Abstractions.Notifications;
 using StoryPoker.Server.Abstractions.Room;
+using StoryPoker.Server.Abstractions.Room.Commands;
 using StoryPoker.Server.Abstractions.Room.Models;
-using StoryPoker.Server.Abstractions.Room.Models.Enums;
 using StoryPoker.Server.Grains.Abstractions;
 using StoryPoker.Server.Grains.Constants;
 using StoryPoker.Server.Grains.RoomGrains.Models;
@@ -35,122 +35,13 @@ internal sealed class RoomGrain(
         return response;
     }
 
-    public async Task<ResponseState> AddPlayerAsync(RoomRequest.AddPlayer request)
+    public async Task<ResponseState> ExecuteCommandAsync(RoomCommand command)
     {
         var stateScreen = storageState.State with { };
-        var result = storageState.State.AddNewPlayer(request);
-        if (result.IsError)
+        var result = command.Execute(storageState.State);
+        if(result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> добавлен игрок Id: {request.Id}");
-        return response;
-    }
-    public async Task<ResponseState> RemovePlayerAsync(Guid playerId)
-    {
-        var stateScreen = storageState.State with { };
-        storageState.State.RemovePlayer(playerId);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> удален игрок Id: {playerId}");
-        return response;
-    }
-
-    public async Task<ResponseState> AddIssueAsync(RoomRequest.AddIssue request)
-    {
-        var stateScreen = storageState.State with { };
-        storageState.State.AddIssue(request);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> добавлена задача.");
-        return response;
-    }
-
-    public async Task<ResponseState> RemoveIssueAsync(Guid issueId)
-    {
-        var stateScreen = storageState.State with { };
-        var result =  storageState.State.RemoveIssue(issueId);
-        if (result.IsError)
-            return ResponseState.Fail(result.FirstError.Description);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> удалена задача.");
-        return response;
-    }
-
-    public async Task<ResponseState> SetCurrentIssueAsync(Guid issueId)
-    {
-        var stateScreen = storageState.State with { };
-        var result = storageState.State.SetCurrentIssue(issueId);
-        if (result.IsError)
-            return ResponseState.Fail(result.FirstError.Description);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> установлена новая текущая задача Id: {issueId}.");
-        return response;
-    }
-
-    public async Task<ResponseState> SetPlayerIssueStoryPointAsync(RoomRequest.SetStoryPoint request)
-    {
-        var stateScreen = storageState.State with { };
-        var result = storageState.State.SetStoryPoint(request);
-        if (result.IsError)
-            return ResponseState.Fail(result.FirstError.Description);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> " +
-                              $"игрок Id: {request.PlayerId} поставил оценку текущей задаче.");
-        if(storageState.State.Issues[storageState.State.VotingIssueId!.Value].Stage == VotingStage.VoteEnded)
-            logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> остановлено голосование по текущей задаче.");
-        return response;
-    }
-
-    public async Task<ResponseState> SetNewSpectatorAsync(Guid playerId)
-    {
-        var stateScreen = storageState.State with { };
-        var result = storageState.State.SetNewSpectator(playerId);
-        if (result.IsError)
-            return ResponseState.Fail(result.FirstError.Description);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> " +
-                              $"игрок Id: {playerId} установлен новым наблюдателем.");
-        return response;
-    }
-
-    public async Task<ResponseState> SetIssueListOrderAsync(IssueOrder order)
-    {
-        var stateScreen = storageState.State with { };
-        storageState.State.SetIssueOrderBy(order);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> установлен новый порядок сортировки задач.");
-        return response;
-    }
-
-    public async Task<ResponseState> SetIssueOrderAsync(Guid issueId, int newOrder)
-    {
-        var stateScreen = storageState.State with { };
-        var result = storageState.State.SetIssuesNewOrder(issueId,newOrder);
-        if (result.IsError)
-            return ResponseState.Fail(result.FirstError.Description);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> Задаче {issueId} установлен новый порядковый номер {newOrder}.");
-        return response;
-    }
-
-    public async Task<ResponseState> StartVoteAsync()
-    {
-        var stateScreen = storageState.State with { };
-        var result = storageState.State.StartVote();
-        if (result.IsError)
-            return ResponseState.Fail(result.FirstError.Description);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> началось голосование по текущей задаче.");
-        return response;
-    }
-
-    public async Task<ResponseState> StopVoteAsync()
-    {
-        var stateScreen = storageState.State with { };
-        var result = storageState.State.StopVote();
-        if (result.IsError)
-            return ResponseState.Fail(result.FirstError.Description);
-        var response = await SaveStateAsync(stateScreen);
-        logger.LogInformation($"Комната № '{this.GetPrimaryKey()}' -> остановлено голосование по текущей задаче.");
-        return response;
+        return await SaveStateAsync(stateScreen);
     }
 
     private async Task<ResponseState> SaveStateAsync(InternalRoom stateScreen)

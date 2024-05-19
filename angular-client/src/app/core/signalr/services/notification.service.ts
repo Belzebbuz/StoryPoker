@@ -12,13 +12,15 @@ import { BehaviorSubject, Observable, filter, map } from 'rxjs';
 })
 export class NotificationService {
   private notifications: {
-    [key in MessageType]: BehaviorSubject<ISignalrNotification>;
+    [key in MessageType]: BehaviorSubject<any>;
   };
   constructor() {
     this.notifications = {
-      [MessageType.RoomStateUpdated]: new BehaviorSubject({
-        messageType: MessageType.RoomStateUpdated,
-      }),
+      [MessageType.RoomStateUpdated]:
+        new BehaviorSubject<RoomStateUpdatedMessage>({
+          messageType: MessageType.RoomStateUpdated,
+          value: '',
+        }),
     };
   }
 
@@ -35,10 +37,9 @@ export class NotificationService {
     );
   }
   public push(message: ISignalrNotification) {
-    if (message.messageType == MessageType.RoomStateUpdated) {
-      this.notifications[message.messageType].next(
-        message as RoomStateUpdatedMessage
-      );
+    const notification = this.notifications[message.messageType];
+    if (notification) {
+      notification.next(message);
     }
   }
 }

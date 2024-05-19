@@ -7,18 +7,18 @@ namespace StoryPoker.Server.Grains.Services.Factories;
 
 public class InternalRoomResponseFactory : IRoomStateResponseFactory
 {
-    public RoomStateResponse ToPlayerResponse(Guid playerId, InternalRoom room)
+    public RoomStateResponse ToPlayerResponse(Guid playerId, InternalRoom internalRoom)
     {
         return new RoomStateResponse()
         {
             PlayerId = playerId,
-            IsPlayerAdded = room.Players.ContainsKey(playerId),
-            Name = room.Name,
-            VotingIssue = GetVotingIssue(room),
-            IsSpectator = room.Players.TryGetValue(playerId, out var player) && player.IsSpectator,
-            Players = GetPlayers(playerId,room),
-            Issues = GetIssues(room),
-            IssueOrder = room.IssueOrderBy
+            IsPlayerAdded = internalRoom.Players.ContainsKey(playerId),
+            Name = internalRoom.Name,
+            VotingIssue = GetVotingIssue(internalRoom),
+            IsSpectator = internalRoom.Players.TryGetValue(playerId, out var player) && player.IsSpectator,
+            Players = GetPlayers(playerId,internalRoom),
+            Issues = GetIssues(internalRoom),
+            IssueOrder = internalRoom.IssueOrderBy
         };
     }
 

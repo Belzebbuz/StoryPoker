@@ -4,6 +4,7 @@ using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Abstractions.Notifications;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;
 using StoryPoker.Server.Abstractions.Room;
+using StoryPoker.Server.Abstractions.Room.Commands;
 
 namespace StoryPoker.Client.Web.Api.Infrastructure.Hubs;
 
@@ -59,7 +60,7 @@ public class NotificationHub(
         if (!connectionStorage.ConnectionExists(userId, roomId.Value))
         {
             var roomGrain = grainFactory.GetGrain<IRoomGrain>(roomId.Value);
-            await roomGrain.RemovePlayerAsync(userId);
+            await roomGrain.ExecuteCommandAsync(new RemovePlayerCommand(userId));
             logger.LogInformation($"Игрок Id:{userId} полностью удален из комнаты Id: {roomId}");
         }
     }

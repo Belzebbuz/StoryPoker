@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using StoryPoker.Client.Web.Api.Abstractions;
+using StoryPoker.Client.Web.Api.Abstractions.Observers;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Observers;
 using StoryPoker.Server.Abstractions.Notifications;
@@ -8,7 +9,7 @@ namespace StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObser
 
 public class GrainObserverService(
     IGrainSubscriptionBus subscriptionBus,
-    IServiceProvider serviceProvider,
+    IServiceScopeFactory scopeFactory,
     IGrainFactory grainFactory,
     ILogger<GrainObserverService> logger) : BackgroundService
 {
@@ -42,15 +43,22 @@ public class GrainObserverService(
     {
         try
         {
+            if (_activeSubscribes.ContainsKey(subscribe.RoomId))
+            {
+                logger.LogInformation($"RoomId: {subscribe.RoomId} подписка уже создана");
+                return;
+            }
             await _semaphore.WaitAsync();
             if (_activeSubscribes.ContainsKey(subscribe.RoomId))
             {
                 logger.LogInformation($"RoomId: {subscribe.RoomId} подписка уже создана");
                 return;
             }
-            var observer = serviceProvider.GetRequiredService<IRoomNotificationObserver>() as RoomNotificationObserver
-                ?? throw new ArgumentException(nameof(RoomNotificationObserver));
-            var _ = observer.StartResubscribeAsync(subscribe.RoomId, subscribe.ResubscribeStoppingToken.Token);
+
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var subscriber = scope.ServiceProvider.GetRequiredService<IRoomObserverSubscriber>();
+            var _ = subscriber.StartAsync(subscribe.RoomId, subscribe.ResubscribeStoppingToken.Token);
+            var observer = scope.ServiceProvider.GetRequiredService<IRoomNotificationObserver>();
             _activeSubscribes.TryAdd(subscribe.RoomId, new(subscribe, observer));
             logger.LogInformation($"RoomId: {subscribe.RoomId} подписка создана");
         }

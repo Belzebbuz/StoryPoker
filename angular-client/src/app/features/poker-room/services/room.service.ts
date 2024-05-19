@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, map, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   AddIssueRequest,
@@ -17,6 +17,7 @@ import {
 })
 export class RoomService {
   constructor(private client: HttpClient) {}
+
   getState(roomId: string): Observable<GetRoomStateResponse> {
     return this.client.get<GetRoomStateResponse>(
       environment.baseApiUrl + '/room/' + roomId

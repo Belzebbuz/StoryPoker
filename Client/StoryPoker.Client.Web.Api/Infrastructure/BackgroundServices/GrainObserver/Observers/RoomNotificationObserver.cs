@@ -1,5 +1,6 @@
 ﻿using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Abstractions.Notifications;
+using StoryPoker.Client.Web.Api.Abstractions.Observers;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;
 using StoryPoker.Client.Web.Api.Infrastructure.Notifications.Messages;
 using StoryPoker.Server.Abstractions.Notifications;
@@ -11,14 +12,14 @@ public class RoomNotificationObserver(
     INotificationService notificationService,
     IGrainSubscriptionBus subscriptionBus,
     IGrainFactory grainFactory)
-    : IRoomNotificationObserver
+    : IRoomNotificationObserver, IRoomObserverSubscriber
 {
     private async Task RoomStateChangedAsync(RoomStateChangedNotification notification)
     {
         await notificationService.SendToRoomAsync(notification.RoomId,
             new RoomStateUpdatedMessage(notification.RoomId));
         logger.LogInformation($"Room: {notification.RoomId} state updated");
-        if (!notification.playerExist)
+        if (!notification.PlayerExist)
             await subscriptionBus.EnqueueAsync(new GrainUnsubscription(notification.RoomId));
     }
 
@@ -34,7 +35,7 @@ public class RoomNotificationObserver(
         }
     }
 
-    public async Task StartResubscribeAsync(Guid roomId, CancellationToken token)
+    public async Task StartAsync(Guid notificationGrainId, CancellationToken token)
     {
         var reference = grainFactory.CreateObjectReference<IRoomNotificationObserver>(this);
         IRoomNotificationGrain notificationGrain;
@@ -42,8 +43,8 @@ public class RoomNotificationObserver(
         {
             while (!token.IsCancellationRequested)
             {
-                logger.LogInformation($"RoomId: {roomId} переподписка.");
-                notificationGrain = grainFactory.GetGrain<IRoomNotificationGrain>(roomId);
+                logger.LogInformation($"RoomId: {notificationGrainId} переподписка.");
+                notificationGrain = grainFactory.GetGrain<IRoomNotificationGrain>(notificationGrainId);
                 await notificationGrain.UnSubscribeAsync(reference);
                 await notificationGrain.SubscribeAsync(reference);
                 await Task.Delay(TimeSpan.FromMinutes(5), token);
@@ -51,13 +52,13 @@ public class RoomNotificationObserver(
         }
         catch(Exception ex)
         {
-            await subscriptionBus.EnqueueAsync(new GrainUnsubscription(roomId));
+            await subscriptionBus.EnqueueAsync(new GrainUnsubscription(notificationGrainId));
         }
         finally
         {
-            notificationGrain = grainFactory.GetGrain<IRoomNotificationGrain>(roomId);
+            notificationGrain = grainFactory.GetGrain<IRoomNotificationGrain>(notificationGrainId);
             await notificationGrain.UnSubscribeAsync(reference);
-            logger.LogInformation($"RoomId: {roomId} отписка");
+            logger.LogInformation($"RoomId: {notificationGrainId} отписка");
         }
     }
 }

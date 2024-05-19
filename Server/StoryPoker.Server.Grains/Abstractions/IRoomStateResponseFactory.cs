@@ -5,5 +5,5 @@ namespace StoryPoker.Server.Grains.Abstractions;
 
 public interface IRoomStateResponseFactory
 {
-    public RoomStateResponse ToPlayerResponse(Guid playerId, InternalRoom room);
+    public RoomStateResponse ToPlayerResponse(Guid playerId, InternalRoom internalRoom);
 }
