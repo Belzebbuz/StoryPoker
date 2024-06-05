@@ -13,6 +13,7 @@ public sealed record ChangeVotingStageCommand(
         {
             VoteStageChangeType.Start => roomState.StartVote(),
             VoteStageChangeType.Stop => roomState.StopVote(),
+            VoteStageChangeType.StartEndTimer => roomState.SetEndingTimerVote(),
             _ => Error.Failure("Команда не поддерживается.")
         };
     }

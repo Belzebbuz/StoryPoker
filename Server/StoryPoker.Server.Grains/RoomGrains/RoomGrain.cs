@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Orleans.Core;
 using Orleans.Runtime;
 using StoryPoker.Server.Abstractions;
@@ -6,9 +7,11 @@ using StoryPoker.Server.Abstractions.Notifications;
 using StoryPoker.Server.Abstractions.Room;
 using StoryPoker.Server.Abstractions.Room.Commands;
 using StoryPoker.Server.Abstractions.Room.Models;
+using StoryPoker.Server.Abstractions.Room.Models.Enums;
 using StoryPoker.Server.Grains.Abstractions;
 using StoryPoker.Server.Grains.Constants;
 using StoryPoker.Server.Grains.RoomGrains.Models;
+using StoryPoker.Server.Grains.RoomGrains.Models.DomainEvents;
 
 namespace StoryPoker.Server.Grains.RoomGrains;
 
@@ -30,7 +33,7 @@ internal sealed class RoomGrain(
         if (storageState.State.Instantiated)
             return ResponseState.Fail("Комната уже создана");
         storageState.State = InternalRoom.Init(request);
-        var response = await SaveStateAsync(stateScreen);
+        var response = await SaveStateAsync(stateScreen, "Init");
         logger.LogInformation($"Комната №'{this.GetPrimaryKey()}' -> успешно создана.");
         return response;
     }
@@ -41,14 +44,32 @@ internal sealed class RoomGrain(
         var result = command.Execute(storageState.State);
         if(result.IsError)
             return ResponseState.Fail(result.FirstError.Description);
-        return await SaveStateAsync(stateScreen);
+        var saveResult = await SaveStateAsync(stateScreen, command.GetType().Name);
+        if (!saveResult.IsSuccess)
+            return saveResult;
+        foreach (var @event in storageState.State.PopEvents())
+        {
+            HandleEvent(@event);
+        }
+        return ResponseState.Success();
     }
 
-    private async Task<ResponseState> SaveStateAsync(InternalRoom stateScreen)
+    private void HandleEvent(IDomainEvent @event)
+    {
+        var runnerType = typeof(IRoomEventRunnerGrain<>).MakeGenericType([@event.GetType()]);
+        var eventRunner = (IRoomEventRunnerGrain)GrainFactory.GetGrain(runnerType,this.GetPrimaryKey());
+        if (eventRunner is not null)
+        {
+            var _ = eventRunner.RunAsync(@event);
+        }
+    }
+
+    private async Task<ResponseState> SaveStateAsync(InternalRoom stateScreen, string source)
     {
         try
         {
             await storageState.WriteStateAsync();
+            logger.LogInformation($"Комната Id:{this.GetPrimaryKey()} состояние изменилось. -> {source}");
             return ResponseState.Success();
         }
         catch (Exception e)
@@ -59,11 +80,11 @@ internal sealed class RoomGrain(
         }
         finally
         {
-            await NotifyAsync();
+            await NotifyChangedAsync();
         }
     }
 
-    private async Task NotifyAsync()
+    private async Task NotifyChangedAsync()
     {
         var notificator = GrainFactory.GetGrain<IRoomNotificationGrain>(this.GetPrimaryKey());
         await notificator.NotifyAsync(

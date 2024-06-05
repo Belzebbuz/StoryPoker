@@ -4,5 +4,6 @@ public enum VotingStage : byte
 {
     NotStarted,
     Voting,
-    VoteEnded
+    VoteEnding,
+    VoteEnded,
 }

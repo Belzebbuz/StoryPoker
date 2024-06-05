@@ -3,10 +3,12 @@ using Newtonsoft.Json;
 using StoryPoker.Server.Abstractions.Room.Models;
 using StoryPoker.Server.Abstractions.Room.Models.Enums;
 using StoryPoker.Server.Abstractions.Room.StateAbstractions;
+using StoryPoker.Server.Grains.Abstractions;
+using StoryPoker.Server.Grains.RoomGrains.Models.DomainEvents;
 
 namespace StoryPoker.Server.Grains.RoomGrains.Models;
 
-public record InternalRoom : IRoomState
+public record InternalRoom : AggregateRoot, IRoomState
 {
     [JsonProperty] public string Name { get; private set; } = string.Empty;
     public IReadOnlyDictionary<Guid, InternalPlayer> Players => _players;
@@ -16,6 +18,7 @@ public record InternalRoom : IRoomState
     [JsonProperty] public Guid? VotingIssueId { get; private set; }
     [JsonProperty] public bool Instantiated { get; private set; }
     [JsonProperty] public IssueOrder IssueOrderBy { get; private set; }
+    [JsonIgnore] public InternalIssue? VotingIssue => VotingIssueId.HasValue ? _issues[VotingIssueId.Value] : null;
     public static InternalRoom Init(RoomRequest.CreateRoom request)
     {
         var playerState = new InternalPlayer() { Name = request.PlayerName, IsSpectator = true, Id = request.PlayerId, Order = 1 };
@@ -92,7 +95,7 @@ public record InternalRoom : IRoomState
 
     public ErrorOr<Success> SetNewSpectator(Guid playerId)
     {
-        if (VotingIssueId.HasValue && _issues[VotingIssueId.Value].Stage == VotingStage.Voting)
+        if (VotingIssue is not null && VotingIssue.Stage == VotingStage.Voting)
             return Error.Failure(description: "Нельзя поменять ведущего во время голосования");
         var currentSpectator = _players.Values.FirstOrDefault(x => x.IsSpectator);
         if(currentSpectator is not null)
@@ -109,19 +112,30 @@ public record InternalRoom : IRoomState
 
     public ErrorOr<Success> StartVote()
     {
-        if (!VotingIssueId.HasValue)
+        if (VotingIssue is null)
             return Error.Failure(description: "Не выбран объект голосования");
-        var issue = _issues[VotingIssueId.Value];
-        return issue.StartVote();
+        return VotingIssue.StartVote();
     }
 
     public ErrorOr<Success> StopVote()
     {
-        if (!VotingIssueId.HasValue)
+        if (VotingIssue is null)
             return Error.Failure(description: "Не выбран объект голосования");
+        if (VotingIssue.Stage == VotingStage.VoteEnded)
+            return Result.Success;
+        VotingIssue.StopVote();
+        return Result.Success;
+    }
 
-        var issue = _issues[VotingIssueId.Value];
-        return issue.StopVote();
+    public ErrorOr<Success> SetEndingTimerVote()
+    {
+        if (VotingIssue is null)
+            return Error.Failure(description: "Не выбран объект голосования");
+        if(VotingIssue.Stage != VotingStage.Voting)
+            return Error.Failure(description: "По данной задаче не идет голосование");
+        VotingIssue.StartEndingVote();
+        AddEvent(new VoteEndingTimerEvent(VotingIssue.Id));
+        return Result.Success;
     }
 
     public ErrorOr<Success> AddIssue(RoomRequest.AddIssue addIssueRequest)
@@ -135,10 +149,9 @@ public record InternalRoom : IRoomState
             Stage = VotingStage.NotStarted
         };
         _issues.Add(issue.Id, issue);
-        if (VotingIssueId.HasValue)
+        if (VotingIssue is not null)
         {
-            var votingIssue = _issues[VotingIssueId.Value];
-            if(votingIssue.Stage != VotingStage.Voting)
+            if(VotingIssue.Stage != VotingStage.Voting)
                 VotingIssueId = issue.Id;
             return Result.Success;
         }
@@ -151,38 +164,39 @@ public record InternalRoom : IRoomState
         var issue = _issues.GetValueOrDefault(issueId);
         if (issue is null)
             return Error.Failure(description:"Не найдена задача");
-        if (VotingIssueId.HasValue)
+        if (VotingIssue is not null && !VotingIssue.CanChangeVotingIssue())
         {
-            var currentIssue = _issues[VotingIssueId.Value];
-            if (currentIssue.Stage == VotingStage.Voting)
-                return Error.Failure(description:"Голосование по текущей задаче еще не закончилось");
+          return Error.Failure(description:"Голосование по текущей задаче еще не закончилось");
         }
         VotingIssueId = issueId;
         return Result.Success;
     }
-
     public ErrorOr<Success> SetStoryPoint(RoomRequest.SetStoryPoint request)
     {
         var playerExist = _players.ContainsKey(request.PlayerId);
         if (!playerExist)
             return Error.Failure(description:"Не найден игрок");
-        if (!VotingIssueId.HasValue)
+        if (VotingIssue is null)
             return Error.Failure(description:"Не выбран объект голосования");
-        var issue = _issues[VotingIssueId.Value];
-        if (issue.Stage == VotingStage.NotStarted)
+        if (VotingIssue.Stage == VotingStage.NotStarted)
             return Error.Failure(description:"Голосование не начато");
-        issue.PlayerStoryPoints[request.PlayerId] = request.StoryPoints;
-        if (issue.Stage == VotingStage.VoteEnded)
+        VotingIssue.PlayerStoryPoints[request.PlayerId] = request.StoryPoints;
+
+        if (VotingIssue.Stage == VotingStage.VoteEnded)
         {
-            issue.RecalculateStoryPoints();
+            VotingIssue.RecalculateStoryPoints();
             return Result.Success;
         }
-        return issue.PlayerStoryPoints.Count == _players.Count - 1 ? StopVote() : Result.Success;
+        if (VotingIssue.PlayerStoryPoints.Count == _players.Count - 1 && VotingIssue.Stage == VotingStage.Voting)
+        {
+            SetEndingTimerVote();
+        }
+        return Result.Success;
     }
 
     public ErrorOr<Success> RemoveIssue(Guid issueId)
     {
-        if(_issues[issueId].Stage == VotingStage.Voting)
+        if(_issues[issueId].CanRemove())
             return Error.Failure(description: "Невозможно удалить предмет голосования");
         _issues.Remove(issueId);
         if(VotingIssueId.HasValue && VotingIssueId.Value == issueId)

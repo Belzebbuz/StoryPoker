@@ -31,7 +31,9 @@
 .btn-danger {
   @apply rounded select-none text-black bg-red-50 border border-red-600 hover:bg-red-100 cursor-pointer px-4 py-2
 }
-
+.btn-waiting {
+  @apply rounded select-none text-black bg-gray-100 border border-gray-600 hover:bg-gray-200 cursor-wait px-4 py-2
+}
 .cdk-drag-preview {
   box-sizing: border-box;
   border-radius: 4px;

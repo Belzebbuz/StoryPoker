@@ -14,7 +14,8 @@ export class AddIssueRequest {
 
 export enum VoteStateChangeCommand {
   Start = 0,
-  Stop = 1,
+  StartEndTimer = 1,
+  Stop = 2,
 }
 
 export enum IssueOrder {
@@ -57,5 +58,6 @@ export interface IssueState {
 export enum VotingStage {
   NotStarted = 0,
   Voting = 1,
-  VoteEnded = 2,
+  VoteEnding = 2,
+  VoteEnded = 3,
 }

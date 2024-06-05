@@ -7,7 +7,7 @@ public interface INotificationService
     Task<ErrorOr<Success>> SendToRoomAsync<T>(Guid roomId, INotificationMessage<T> message);
 }
 
-public interface INotificationMessage<T>
+public interface INotificationMessage<out T>
 {
     public NotificationMessageType MessageType { get; }
     public T Value { get; }
@@ -15,5 +15,6 @@ public interface INotificationMessage<T>
 
 public enum NotificationMessageType : byte
 {
-    RoomStateUpdated
+    RoomStateUpdated,
+    RoomTimerChanged
 }

@@ -44,9 +44,9 @@ public class GrainObserverService(
             logger.LogInformation($"RoomId: {subscribe.RoomId} подписка уже создана");
             return;
         }
+        await _semaphore.WaitAsync();
         try
         {
-            await _semaphore.WaitAsync();
             if (_activeSubscribes.ContainsKey(subscribe.RoomId))
             {
                 logger.LogInformation($"RoomId: {subscribe.RoomId} подписка уже создана");

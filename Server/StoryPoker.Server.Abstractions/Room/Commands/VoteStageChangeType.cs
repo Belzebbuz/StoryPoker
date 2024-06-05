@@ -3,5 +3,6 @@
 public enum VoteStageChangeType : byte
 {
     Start,
+    StartEndTimer,
     Stop
 }

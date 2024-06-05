@@ -45,12 +45,14 @@ export class PlayerComponent implements OnInit {
     if (!this.votingIssue || this.votingIssue.stage == VotingStage.NotStarted)
       return ShowPointsState.Cross;
     if (
-      this.votingIssue.stage == VotingStage.Voting &&
+      (this.votingIssue.stage == VotingStage.Voting ||
+        this.votingIssue.stage == VotingStage.VoteEnding) &&
       !this.player.currentVotingPoint.voted
     )
       return ShowPointsState.Voting;
     if (
-      this.votingIssue.stage == VotingStage.Voting &&
+      (this.votingIssue.stage == VotingStage.Voting ||
+        this.votingIssue.stage == VotingStage.VoteEnding) &&
       this.player.currentVotingPoint.voted &&
       this.player.currentVotingPoint.value == null
     )

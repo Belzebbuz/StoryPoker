@@ -24,7 +24,7 @@
       <div
         matTooltip="Средняя"
         [matTooltipClass]="'border bg-gray-50 rounded'"
-        class="flex justify-center items-center  bg-gray-200 text-black min-w-8 min-h-8 p-1 rounded-md"
+        class="flex justify-center items-center bg-gray-200 text-black min-w-8 min-h-8 p-1 rounded-md"
       >
         <span *ngIf="issue.storyPoints" class="font-bold">{{
           issue.storyPoints
@@ -42,12 +42,10 @@
         <span *ngIf="!issue.storyPoints" class="font-bold">-</span>
       </div>
     </div>
-    <button
-      *ngIf="spectator"
-      (click)="deleteIssue()"
-      class="btn-danger text-lg font-bold"
-    >
-      <app-icon-trash />
-    </button>
+    <div *ngIf="spectator">
+      <button (click)="deleteIssue()" [disabled]="removing" [ngClass]="{'btn-waiting': removing, 'btn-danger': !removing}" class=" text-lg font-bold">
+        <app-icon-trash />
+      </button>
+    </div>
   </div>
 </div>

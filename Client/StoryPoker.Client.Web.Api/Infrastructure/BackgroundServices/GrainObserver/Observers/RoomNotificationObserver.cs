@@ -18,17 +18,25 @@ public class RoomNotificationObserver(
     {
         await notificationService.SendToRoomAsync(notification.RoomId,
             new RoomStateUpdatedMessage(notification.RoomId));
-        logger.LogInformation($"Room: {notification.RoomId} state updated");
+        logger.LogInformation($"Комната Id: {notification.RoomId} состояние изменилось");
         if (!notification.PlayerExist)
             await subscriptionBus.EnqueueAsync(new GrainUnsubscription(notification.RoomId));
     }
-
+    private async Task RoomVoteEndingTimerAsync(RoomVoteEndingTimerNotification notification)
+    {
+        await notificationService.SendToRoomAsync(notification.RoomId,
+            new RoomVoteEndingTimerMessage(notification.TimeLeft));
+        logger.LogInformation($"Комната Id: {notification.RoomId} таймер окончания голосования: {notification.TimeLeft}");
+    }
     public async Task HandleAsync(INotification notification)
     {
         switch (notification)
         {
             case RoomStateChangedNotification roomChanged:
                 await RoomStateChangedAsync(roomChanged);
+                break;
+            case RoomVoteEndingTimerNotification timerChanged:
+                await RoomVoteEndingTimerAsync(timerChanged);
                 break;
             default:
                 return;

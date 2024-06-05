@@ -13,6 +13,7 @@ public interface IRoomState
     ErrorOr<Success> SetNewSpectator(Guid playerId);
     ErrorOr<Success> StartVote();
     ErrorOr<Success> StopVote();
+    ErrorOr<Success> SetEndingTimerVote();
     ErrorOr<Success> AddIssue(RoomRequest.AddIssue addIssueRequest);
     ErrorOr<Success> SetCurrentIssue(Guid issueId);
     ErrorOr<Success> SetStoryPoint(RoomRequest.SetStoryPoint request);

@@ -51,15 +51,13 @@ public class InternalRoomResponseFactory : IRoomStateResponseFactory
                 playerState =>
                 {
                     var playerVoted =
-                        state.VotingIssueId.HasValue &&
-                        state.Issues[state.VotingIssueId.Value].PlayerStoryPoints
-                            .ContainsKey(playerState.Id);
+                        state.VotingIssue?.PlayerStoryPoints
+                            .ContainsKey(playerState.Id) ?? false;
                     var canShowValue =
-                        (state.VotingIssueId.HasValue &&
-                         state.Issues[state.VotingIssueId.Value].Stage != VotingStage.Voting)
+                        (state.VotingIssue?.Stage != VotingStage.Voting && state.VotingIssue?.Stage != VotingStage.VoteEnding)
                         || userId == playerState.Id;
-                    int? playerVotePoint = playerVoted && canShowValue
-                        ? state.Issues[state.VotingIssueId!.Value].PlayerStoryPoints[playerState.Id]
+                    var playerVotePoint = playerVoted && canShowValue
+                        ? state.VotingIssue?.PlayerStoryPoints[playerState.Id]
                         : null;
                     return new PlayerStateResponse()
                     {

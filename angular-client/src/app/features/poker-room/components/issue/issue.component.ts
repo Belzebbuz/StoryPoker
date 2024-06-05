@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { IssueState } from '../../models/poker-room.model';
 import { RoomService } from '../../services/room.service';
 import { CommonModule } from '@angular/common';
@@ -24,6 +24,7 @@ export class IssueComponent implements OnInit {
   @Input() issue!: IssueState;
   @Input() roomId!: string;
   @Input() spectator = false;
+  removing = false;
   constructor(
     private roomService: RoomService,
     public linkWrapperService: LinkWrapperService
@@ -36,6 +37,9 @@ export class IssueComponent implements OnInit {
   }
 
   deleteIssue() {
-    this.roomService.deleteIssue(this.roomId, this.issue.id).subscribe();
+    this.removing = true;
+    this.roomService
+      .deleteIssue(this.roomId, this.issue.id)
+      .subscribe((_) => (this.removing = false));
   }
 }

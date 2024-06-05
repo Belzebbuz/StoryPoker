@@ -19,6 +19,10 @@ export class NotificationService {
         new BehaviorSubject<ISignalrNotification>({
           messageType: NotifiactionType.RoomStateUpdated,
         }),
+      [NotifiactionType.RoomTimerChanged]:
+        new BehaviorSubject<ISignalrNotification>({
+          messageType: NotifiactionType.RoomTimerChanged,
+        }),
     };
   }
 
