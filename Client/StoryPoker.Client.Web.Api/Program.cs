@@ -1,23 +1,9 @@
 using System.Globalization;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Channels;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
-using StoryPoker.Client.Web.Api.Abstractions;
-using StoryPoker.Client.Web.Api.Abstractions.Notifications;
-using StoryPoker.Client.Web.Api.Abstractions.Observers;
 using StoryPoker.Client.Web.Api.Configurations;
 using StoryPoker.Client.Web.Api.Extensions;
-using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver;
-using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;
-using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Observers;
 using StoryPoker.Client.Web.Api.Infrastructure.Hubs;
-using StoryPoker.Client.Web.Api.Infrastructure.Notifications;
-using StoryPoker.Server.Abstractions.Notifications;
-using StoryPoker.Server.Abstractions.Room;
-using StoryPoker.Server.Abstractions.Room.Models;
 
 StaticLogger.EnsureInitialized();
 Log.Information("Server Booting Up...");
@@ -34,7 +20,15 @@ try
     });
     builder.Host.AddOrleansClient(builder.Configuration);
     builder.Services.AddAuth();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddSwaggerGen(c =>
+    {
+        c.EnableAnnotations();
+        c.UseAllOfForInheritance();
+        c.SelectSubTypesUsing(baseType =>
+        {
+            return typeof(Program).Assembly.GetTypes().Where(type => type.IsSubclassOf(baseType));
+        });
+    });
     builder.Services.AddControllers()
         .ConfigureApiBehaviorOptions(config =>
         {
@@ -52,6 +46,7 @@ try
     builder.Services.AddCurrentUser();
     builder.Services.AddClientNotifications();
     builder.Services.AddGrainObserving();
+    builder.Services.AddServices();
 
     var app = builder.Build();
     if (app.Environment.IsDevelopment())

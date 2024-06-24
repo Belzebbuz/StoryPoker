@@ -1,16 +1,56 @@
-<div  [formGroup]="form">
-  <label class="text-sm text-primary-blue-500" [attr.for]="question.key">{{question.label}}</label>
+<div *ngIf="question && form" [formGroup]="form">
+  <label class="text-sm text-primary-blue-500" [attr.for]="question.key">{{
+    question.label
+  }}</label>
 
   <div [ngSwitch]="question.controlType">
-
-    <input *ngSwitchCase="'textbox'" class="flex w-full h-10 rounded-lg border border-gray-200 p-3 text-sm outline-none focus:border-gray-400" [formControlName]="question.key"
-            [id]="question.key" [type]="question.type">
-
-    <select [id]="question.key" *ngSwitchCase="'dropdown'" [formControlName]="question.key">
-      <option *ngFor="let opt of question.options" [value]="opt.key">{{opt.value}}</option>
-    </select>
-
+    <input
+      *ngSwitchCase="'textbox'"
+      class="input-primary"
+      [formControlName]="question.key"
+      [id]="question.key"
+      [type]="question.type"
+    />
+    <app-dropdown-input
+      (onControlAdded)="onControlAdded.emit($event)"
+      (onControlRemoved)="onControlRemoved.emit($event)"
+      *ngSwitchCase="'dropdown'"
+      [form]="form"
+      [question]="question"
+    />
+    <div *ngSwitchCase="'multitext'" class="flex flex-col gap-1">
+      <div class="flex flex-row gap-1">
+        <input
+          type="text"
+          [(ngModel)]="currentGroupName"
+          [ngModelOptions]="{ standalone: true }"
+          class="input-primary"
+        />
+        <button type="button" class="btn-primary-outline" (click)="addItem()">
+          Добавить
+        </button>
+      </div>
+      <div class="flex flex-row gap-2 flex-wrap">
+        <div
+          *ngFor="let item of multiTextValues; let i = index"
+          class="flex flex-row justify-between items-center gap-4 border rounded-md py-1 px-2"
+        >
+          <span>{{ item }}</span
+          ><button
+            (click)="removeItem(i)"
+            class="text-lg text-gray-600 hover:text-gray-400"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+    <div *ngSwitchCase="'multiselect'" class="flex flex-col gap-1">
+      <app-multiselect-input [form]="form" [question]="question" />
+    </div>
   </div>
 
-  <div class="text-sm text-red-400" *ngIf="isError">{{question.label}} обязательно</div>
+  <div class="text-sm text-red-400" *ngIf="isError">
+    {{ question.label }} обязательно
+  </div>
 </div>

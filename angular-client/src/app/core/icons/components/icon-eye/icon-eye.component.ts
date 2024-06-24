@@ -3,8 +3,8 @@ import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-icon-eye',
-  standalone: true,
   templateUrl: './icon-eye.component.html',
+  standalone: true,
   imports: [CommonModule],
 })
 export class IconEyeComponent implements OnInit {

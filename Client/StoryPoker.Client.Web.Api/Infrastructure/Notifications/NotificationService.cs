@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.SignalR;
 using StoryPoker.Client.Web.Api.Abstractions.Notifications;
 using StoryPoker.Client.Web.Api.Infrastructure.Hubs;
-using StoryPoker.Server.Abstractions.Room;
 
 namespace StoryPoker.Client.Web.Api.Infrastructure.Notifications;
 

@@ -1,0 +1,34 @@
+<div class="grid grid-cols-2 gap-2 border p-1 rounded">
+  <div class="border-r">
+    <span class="text-sm font-bold text-primary-blue-500 text-center ml-1"
+      >Не участвуют</span
+    >
+    <div class="grid grid-cols-2 gap-1 w-full bg-white rounded  pr-2 mt-1">
+      <button
+        [disabled]="optionDisbaled(item.key)"
+        (click)="addItem(item.key)"
+        *ngFor="let item of question.options | keyvalue"
+        class="flex flex-row items-center justify-between w-full cursor-pointer text-lg font-bold hover:bg-gray-100 p-2 border rounded-sm disabled:cursor-default disabled:bg-gray-100"
+      >
+        <span>{{ item.value.value }}</span>
+        <app-icon-chevron [className]="'w-5 h-5'" />
+      </button>
+    </div>
+  </div>
+
+  <div class="">
+    <span class="text-sm font-bold text-primary-blue-500 text-center ml-1"
+      >Участники</span
+    >
+    <div class="grid grid-cols-2 gap-1 w-full rounded mt-1">
+      <div
+        (click)="removeItem(i)"
+        *ngFor="let item of selectedValues; let i = index"
+        class="flex flex-row items-center justify-between w-full cursor-pointer text-lg font-bold hover:bg-gray-100 p-2 border rounded-sm"
+      >
+        <span>{{ item }}</span>
+        <div class="text-lg">✕</div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,75 @@
+<div class="flex flex-col gap-2 border rounded bg-gray-50 border-gray-200 p-2">
+  <div class="flex flex-row gap-1 items-center">
+    <div
+      appClickOutside
+      (clickOutside)="isContextMenuOpened = false"
+      *ngIf="isSpectator"
+      class=""
+    >
+      <app-icon-points
+        (click)="isContextMenuOpened = !isContextMenuOpened"
+        class="cursor-pointer hover:text-gray-600"
+      />
+      <div
+        *ngIf="isContextMenuOpened"
+        class="absolute select-none flex flex-col border bg-white text-lg"
+      >
+        <button
+          (click)="openUpdateDialog()"
+          class="hover:bg-gray-100 px-4 py-1"
+        >
+          Изменить
+        </button>
+        <button
+        (click)="deleteIssue()"
+          class="hover:bg-gray-100 px-4 py-1 disabled:cursor-default disabled:bg-gray-100"
+        >
+          Удалить
+        </button>
+      </div>
+    </div>
+    <div
+      [innerHTML]="linkWrapperService.replaceUrlsWithLinks(issue.title)"
+      class="w-[98%] text-2xl break-words text-wrap px-4"
+    ></div>
+  </div>
+  <!-- ОЦЕНКИ -->
+  <div class="grid grid-cols-2 gap-2 border-t p-2">
+    @for (group of issue.groupPoints; track $index) {
+      <div class="grid grid-cols-[30%_70%] gap-2">
+        <span class="text-xl font-bold justify-self-end">{{ group.name }}:</span>
+        <div class="flex flex-row gap-2">
+          <div
+          matTooltip="Средняя"
+          [matTooltipClass]="'border bg-gray-50 rounded'"
+          class="flex justify-center items-center bg-gray-200 text-black min-w-8 min-h-8 p-1 rounded-md"
+        >
+          <span *ngIf="group.storyPoints != undefined" class="font-bold">{{
+            group.storyPoints
+          }}</span>
+          <span *ngIf="group.storyPoints == undefined" class="font-bold">-</span>
+        </div>
+        <div
+          matTooltip="Фибоначчи"
+          [matTooltipClass]="'border bg-gray-50 rounded'"
+          class="flex justify-center items-center bg-gray-200 text-black min-w-8 min-h-8 p-1 rounded-md"
+        >
+          <span *ngIf="group.fibonacciStoryPoints != undefined" class="font-bold">{{
+            group.fibonacciStoryPoints
+          }}</span>
+          <span *ngIf="group.fibonacciStoryPoints == undefined" class="font-bold">-</span>
+        </div>
+        </div>
+      </div>
+    }
+  </div>
+  <!-- ГОЛОСОВАНИЕ -->
+  <div *ngIf="isSpectator" class="flex flex-row flex-wrap items-center gap-4 border-t pt-2">
+    <button
+      (click)="selectVotingIssue()"
+      class="btn-primary-outline text-lg font-bold w-full"
+    >
+      Голосовать
+    </button>
+  </div>
+</div>

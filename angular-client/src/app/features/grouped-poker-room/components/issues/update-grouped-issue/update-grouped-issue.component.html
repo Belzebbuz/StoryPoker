@@ -1,0 +1,12 @@
+<div
+  class="w-[80dvw] md:w-[30dvw] flex flex-col items-center gap-4 rounded p-4 bg-white"
+>
+  <h1 class="text-4xl font-bold text-primary-blue-500">Изменить задачу</h1>
+  <app-dynamic-form
+    class="w-full"
+    (onSubmit)="onSubmit($event)"
+    [parameters]="parameters"
+    [confirmText]="'Сохранить'"
+    [formName]="'update-grouped-issue'"
+  ></app-dynamic-form>
+</div>

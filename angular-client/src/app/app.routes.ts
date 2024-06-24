@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
-import { HomeMainComponent } from './features/home/pages/main/home-main.component';
-import { PokerRoomComponent } from './features/poker-room/page/poker-room/poker-room.component';
+import { HomeMainComponent } from './features/home/page/home-main.component';
+import { DefaultPokerRoomComponent } from './features/default-poker-room/page/default-poker-room.component';
+import { GroupedPokerRoomComponent } from './features/grouped-poker-room/page/grouped-poker-room.component';
 
 export const routes: Routes = [
   {
@@ -8,7 +9,11 @@ export const routes: Routes = [
     component: HomeMainComponent,
   },
   {
-    path: 'room/:id',
-    component: PokerRoomComponent,
+    path: 'room/d/:id',
+    component: DefaultPokerRoomComponent,
+  },
+  {
+    path: 'room/g/:id',
+    component: GroupedPokerRoomComponent,
   },
 ];

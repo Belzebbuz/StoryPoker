@@ -34,6 +34,9 @@
 .btn-waiting {
   @apply rounded select-none text-black bg-gray-100 border border-gray-600 hover:bg-gray-200 cursor-wait px-4 py-2
 }
+.input-primary{
+  @apply flex w-full h-10 rounded-lg border border-gray-200 p-3 text-sm outline-none focus:border-gray-400
+}
 .cdk-drag-preview {
   box-sizing: border-box;
   border-radius: 4px;

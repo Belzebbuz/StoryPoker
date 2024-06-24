@@ -1,0 +1,46 @@
+<div
+  *ngIf="issues"
+  class="flex flex-row md:flex-col gap-2 overflow-y-auto max-h-[95%]"
+>
+  <div class="flex flex-row items-center justify-between px-2">
+    <span class="max-md:hidden text-3xl select-none mb-2">Задачи:</span>
+    <div *ngIf="isSpectator">
+      <app-icon-bars-arrow-down
+        (click)="setIssueOrder(1)"
+        *ngIf="issueOrder == 0"
+        class="hover:text-gray-600"
+        [className]="'w-8 h-8 cursor-pointer'"
+      />
+      <app-icon-bars-arrow-up
+        (click)="setIssueOrder(0)"
+        *ngIf="issueOrder == 1"
+        class="hover:text-gray-600"
+        [className]="'w-8 h-8 cursor-pointer'"
+      />
+    </div>
+  </div>
+  <div
+    [cdkDropListDisabled]="!isSpectator"
+    cdkDropList
+    class="drag-n-drop-list flex flex-col gap-2"
+    (cdkDropListDropped)="drop($event)"
+  >
+    <div cdkDrag class="drag-n-drop-box" *ngFor="let issue of issues">
+      <app-grouped-issue
+        cdkDragHandle
+        [cdkDragHandleDisabled]="!isSpectator"
+        [isSpectator]="isSpectator"
+        [roomId]="roomId"
+        [issue]="issue"
+      />
+    </div>
+  </div>
+</div>
+
+<button
+  *ngIf="isSpectator"
+  (click)="addIssueDialog()"
+  class="self-center mt-2 w-2/3 font-bold text-xl btn-primary"
+>
+  Добавить
+</button>

@@ -1,14 +1,28 @@
-<div>
+<div
+  *ngIf="!inputs"
+  class="mx-auto w-10 h-10 bg-primary-blue-200 animate-ping rounded-full"
+></div>
+<div *ngIf="inputs && form">
   <form class="flex flex-col gap-4" (ngSubmit)="submit()" [formGroup]="form">
-
     <div *ngFor="let input of inputs">
-      <app-dynamic-input [submitted]="submitted" [question]="input" [form]="form"></app-dynamic-input>
+      <app-dynamic-input
+        [submitted]="submitted"
+        [question]="input"
+        [form]="form"
+        (onControlAdded)="addInput($event)"
+        (onControlRemoved)="removeInput($event)"
+      ></app-dynamic-input>
     </div>
 
-      <button type="submit" class="bg-primary-blue-500 hover:bg-primary-blue-400 text-white text-xl cursor-pointer rounded py-2 px-4">{{confirmText}}</button>
+    <button
+      type="submit"
+      class="bg-primary-blue-500 hover:bg-primary-blue-400 text-white text-xl cursor-pointer rounded py-2 px-4"
+    >
+      {{ confirmText }}
+    </button>
   </form>
 
   <div *ngIf="payLoad">
-    <strong>Saved the following values</strong><br>{{payLoad}}
+    <strong>Saved the following values</strong><br />{{ payLoad }}
   </div>
 </div>

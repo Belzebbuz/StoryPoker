@@ -1,0 +1,47 @@
+<div class="flex flex-col h-full overflow-y-auto max-h-[95%]">
+  <!-- ВЕДУЩИЙ -->
+  <div
+    *ngIf="roomState.spectator.inRoom"
+    class="flex flex-row text-center gap-2"
+  >
+    <div
+      class="w-11/12 flex row gap-2 items-center border border-gray-200 rounded p-2"
+    >
+      <span class="text-xl">{{ roomState.spectator.name }}</span>
+    </div>
+    <div
+      class="flex items-center justify-center border border-gray-200 p-1 rounded-lg min-w-12 min-h-16"
+    >
+      <app-icon-eye [className]="'w-6 h-6 text-gray-400'" />
+    </div>
+  </div>
+  <div
+    *ngIf="!roomState.spectator.inRoom"
+    class="flex flex-row text-center font-bold gap-2"
+  >
+    <span>Ведущего нет</span>
+  </div>
+  <!-- ДОБАВИТЬ ГРУППУ -->
+  <div
+    *ngIf="roomState.spectator.isCurrentPlayer"
+    class="border-t border-gray-300 mx-2 my-2"
+  ></div>
+  <button
+    *ngIf="roomState.spectator.isCurrentPlayer"
+    (click)="addGroups()"
+    class="btn-primary-outline text-lg"
+  >
+    Добавить команду
+  </button>
+  <!-- ГРУППЫ -->
+  <div class="border-t border-gray-300 mx-2 my-2"></div>
+  <div *ngIf="roomState.groups" class="flex flex-col gap-2 h-full">
+    @for (group of roomState.groups; track $index) {
+    <app-group
+      [roomId]="roomId"
+      [spectator]="roomState.spectator"
+      [group]="group"
+    />
+    }
+  </div>
+</div>

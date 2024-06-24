@@ -32,6 +32,6 @@ ssh root@"HOSTNAME" docker pull "$REGISTRY"/storypoker.client.web.api:latest
 ssh root@"HOSTNAME" docker pull "$REGISTRY"/storypoker.server.silo:latest
 
 # запускаем новые образы
+ssh root@"HOSTNAME" docker run -d --name story-poker-silo "$REGISTRY"/storypoker.server.silo:latest
 ssh root@"HOSTNAME" docker run -d --name story-poker-client "$REGISTRY"/storypoker.client.web.api:latest --ports 8015:8015
-ssh root@"HOSTNAME" docker run -d --name story-poker-silo "$REGISTRY"/storypoker.server.silo:latest --ports 8025:8025
 echo "Развертывание завершено."

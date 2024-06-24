@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using StoryPoker.Server.Abstractions.Room;
+using StoryPoker.Server.Abstractions.Metadata;
 
 namespace StoryPoker.Client.Web.Api.Attributes;
 
@@ -23,7 +23,11 @@ public class RoomExistFilterAttribute: ActionFilterAttribute
         var roomStorage = grainFactory.GetGrain<IRoomStorageGrain>(Guid.Empty);
         var roomExist = await roomStorage.RoomExistAsync(id);
         if (roomExist)
+        {
+            var roomMetadataGrain = grainFactory.GetGrain<IRoomMetadataGrain>(id);
+            await roomMetadataGrain.UpdateTimeAsync();
             await next();
+        }
         else
             context.Result = new NotFoundResult();
     }

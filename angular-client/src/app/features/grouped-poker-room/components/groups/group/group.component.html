@@ -1,0 +1,99 @@
+<div class="flex flex-col p-2 border border-gray-200 rounded">
+  <!-- УПРАВЛЕНИЕ/ИНФА -->
+  <div
+    (mouseenter)="isHiddenMenuOpened = true"
+    (mouseleave)="isHiddenMenuOpened = false"
+    class="grid grid-cols-[5%_30%_45%_20%]"
+  >
+    <!-- ОТКРЫТЬ ГРУППУ -->
+    <app-icon-chevron
+      class="self-center"
+      *ngIf="isOpened"
+      (click)="isOpened = !isOpened"
+      [className]="'w-5 h-5 rotate-90 cursor-pointer hover:text-gray-600'"
+    /><app-icon-chevron
+      class="self-center"
+      *ngIf="!isOpened"
+      (click)="isOpened = !isOpened"
+      [className]="'w-5 h-5 rotate-0 cursor-pointer hover:text-gray-600'"
+    />
+    <!-- НАЗВАНИЕ -->
+    <div
+      appClickOutside
+      (clickOutside)="isNameInputOpened = false"
+      class="flex flex-row justify-between gap-1 items-center px-2"
+    >
+      <span *ngIf="!isNameInputOpened" class="text-xl select-none font-bold">{{
+        group.name
+      }}</span>
+      <form
+        (ngSubmit)="submitRename()"
+        [formGroup]="changeNameForm"
+        *ngIf="isNameInputOpened"
+      >
+        <input
+          autofocus
+          [formControlName]="'newName'"
+          [id]="'newName'"
+          class="text-xl font-bold flex w-full rounded-lg border border-gray-200 px-1 -ml-2 outline-none focus:border-gray-400"
+          placeholder="{{ group.name }}"
+        />
+      </form>
+      <app-icon-pencil
+        *ngIf="
+          (isHiddenMenuOpened || isNameInputOpened) && spectator.isCurrentPlayer
+        "
+        (click)="openRenameForm()"
+        class="text-gray-400 hover:text-gray-600 cursor-pointer"
+        [className]="'w-5 h-5'"
+      />
+    </div>
+    <!-- Кол-во УЧАСТНИКОВ -->
+    <span class="text-lg select-none text-center border-r border-l px-1"
+      >Проголосовали: {{votedCount}} / {{ group.players.length }} </span
+    >
+    <!-- КОНТЕКСТНОЕ МЕНЮ -->
+    <div
+      class="flex flex-row justify-end"
+      appClickOutside
+      (clickOutside)="isContextMenuOpened = false"
+    >
+      <app-icon-points
+        (click)="isContextMenuOpened = !isContextMenuOpened"
+        [className]="'w-6 h-6 cursor-pointer hover:text-gray-600'"
+      />
+      <div
+        *ngIf="isContextMenuOpened"
+        class="absolute mt-6 -mr-16 select-none flex flex-col border bg-white text-lg"
+      >
+        <button
+          (click)="changePlayerRoom()"
+          *ngIf="!spectator.isCurrentPlayer"
+          class="hover:bg-gray-100 px-2 py-1"
+        >
+          Перейти
+        </button>
+        <button
+          [disabled]="group.players.length != 0"
+          *ngIf="spectator.isCurrentPlayer"
+          (click)="removeGroup()"
+          class="hover:bg-gray-100 px-2 py-1 disabled:cursor-default disabled:bg-gray-100"
+        >
+          Удалить
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- ИГРОКИ -->
+  <div
+    *ngIf="isOpened && group.players"
+    class="flex flex-col gap-2 border-t border-gray-200 pt-2 mt-2"
+  >
+    @for (player of group.players; track $index) {
+    <app-grouped-player [player]="player" />
+    }
+  </div>
+  <div *ngIf="group.players.length == 0 && isOpened" class="text-center">
+    Группа пустая
+  </div>
+</div>

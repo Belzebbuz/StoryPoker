@@ -4,6 +4,11 @@ import { InputBase } from '../../models/input-base';
 import { CommonModule } from '@angular/common';
 import { InputControlService } from '../../services/input-control.service';
 import { DynamicInputComponent } from '../dynamic-input/dynamic-input.component';
+import {
+  DynamicFormService,
+  FormName,
+  FormParameters,
+} from '../../services/dynamic-form.service';
 
 @Component({
   selector: 'app-dynamic-form',
@@ -12,21 +17,41 @@ import { DynamicInputComponent } from '../dynamic-input/dynamic-input.component'
   imports: [CommonModule, ReactiveFormsModule, DynamicInputComponent],
 })
 export class DynamicFormComponent implements OnInit {
-  @Input() inputs: InputBase<string>[] | null = [];
+  @Input() formName!: FormName;
   @Input() confirmText: string = 'Создать';
-  @Output() onSubmit = new EventEmitter();
-  form!: FormGroup;
+  @Input() parameters: FormParameters = {};
+  @Output()
+  onSubmit = new EventEmitter();
+  inputs?: InputBase<any>[];
+  form?: FormGroup;
   payLoad = '';
   submitted = false;
-  constructor(private qcs: InputControlService) {}
+  constructor(
+    private qcs: InputControlService,
+    private formService: DynamicFormService
+  ) {}
 
   ngOnInit() {
-    this.form = this.qcs.toFormGroup(this.inputs as InputBase<string>[]);
+    this.formService
+      .getInputs(this.formName, this.parameters)
+      .subscribe((inputs) => {
+        this.inputs = inputs;
+        this.form = this.qcs.toFormGroup(inputs as InputBase<any>[]);
+      });
   }
 
   submit() {
+    if (!this.form) return;
     this.submitted = true;
     if (this.form.invalid) return;
     this.onSubmit.emit(this.form);
+  }
+  addInput(input: InputBase<any>) {
+    this.inputs?.push(input);
+  }
+  removeInput(input: InputBase<any>) {
+    const index = this.inputs?.findIndex((x) => x.key == input.key);
+    if (!index) return;
+    this.inputs?.splice(index, 1);
   }
 }

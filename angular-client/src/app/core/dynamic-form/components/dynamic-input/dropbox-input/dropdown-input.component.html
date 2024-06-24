@@ -1,0 +1,13 @@
+<div [formGroup]="form" class="">
+  <select
+  (change)="addControls($event)"
+  [id]="question.key"
+  class="flex w-full h-10 rounded-lg border border-gray-200 text-lg outline-none focus:border-gray-400"
+  [formControlName]="question.key"
+>
+  <option *ngFor="let opt of question.options | keyvalue" [value]="opt.key">
+    {{ opt.value.value }}
+  </option>
+</select>
+</div>
+

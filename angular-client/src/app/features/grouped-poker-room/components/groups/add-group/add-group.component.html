@@ -1,0 +1,13 @@
+<div
+  class="w-[80dvw] md:w-[30dvw] flex flex-col items-center gap-4 rounded p-4 bg-white"
+>
+  <h1 class="text-4xl font-bold text-primary-blue-500">Добавить команды</h1>
+  <app-dynamic-form
+    class="w-full"
+    [confirmText]="'Подключиться'"
+    [confirmText]="'Добавить'"
+    (onSubmit)="onSubmit($event)"
+    [parameters]="{'roomId':roomId}"
+    [formName]="'add-groups'"
+  ></app-dynamic-form>
+</div>

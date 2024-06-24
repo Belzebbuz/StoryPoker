@@ -1,0 +1,25 @@
+<div class="h-svh pt-16">
+  <div class="flex flex-col md:flex-row h-full" *ngIf="roomState && roomId">
+    <!-- ИГРОКИ -->
+    <app-grouped-players-list
+      [roomState]="roomState"
+      [roomId]="roomId"
+      class="p-2 md:w-1/4 max-md:h-1/6 flex flex-col justify-items-center"
+    />
+    <!-- ГОЛОСОВАНИЕ -->
+    <app-grouped-voting
+      [roomId]="roomId"
+      [roomState]="roomState"
+      [isSpectator]="roomState.spectator.isCurrentPlayer"
+      class="md:w-1/2 max-md:h-2/3 border-x border-primary-gray-light"
+    />
+    <!-- ЗАДАЧИ -->
+    <app-grouped-issues-list
+      [issues]="roomState.issues"
+      [roomId]="roomId"
+      [issueOrder]="roomState.issueOrder"
+      [isSpectator]="roomState.spectator.isCurrentPlayer"
+      class="p-2 md:w-1/4 max-md:h-1/4 flex flex-col justify-items-center"
+    />
+  </div>
+</div>

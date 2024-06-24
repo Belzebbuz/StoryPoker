@@ -2,5 +2,6 @@
 
 public class WebHookConfig
 {
-    public required string CreatedRoomLink { get; set; }
+    public required string DefaultRoomLink { get; set; }
+    public required string GroupedRoomLink { get; set; }
 }

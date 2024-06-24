@@ -3,8 +3,14 @@ using Microsoft.AspNetCore.SignalR;
 using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Abstractions.Notifications;
 using StoryPoker.Client.Web.Api.Infrastructure.BackgroundServices.GrainObserver.Channels;
-using StoryPoker.Server.Abstractions.Room;
-using StoryPoker.Server.Abstractions.Room.Commands;
+using StoryPoker.Server.Abstractions.Common;
+using StoryPoker.Server.Abstractions.DefaultRoom;
+using StoryPoker.Server.Abstractions.DefaultRoom.Commands;
+using StoryPoker.Server.Abstractions.DefaultRoom.Models;
+using StoryPoker.Server.Abstractions.GroupedRoom;
+using StoryPoker.Server.Abstractions.GroupedRoom.Commands;
+using StoryPoker.Server.Abstractions.Metadata;
+using StoryPoker.Server.Abstractions.Metadata.Models.Enums;
 
 namespace StoryPoker.Client.Web.Api.Infrastructure.Hubs;
 
@@ -59,8 +65,21 @@ public class NotificationHub(
             return;
         if (!connectionStorage.ConnectionExists(userId, roomId.Value))
         {
-            var roomGrain = grainFactory.GetGrain<IRoomGrain>(roomId.Value);
-            await roomGrain.ExecuteCommandAsync(new RemovePlayerCommand(userId));
+            var metadata = await grainFactory.GetGrain<IRoomMetadataGrain>(roomId.Value).GetAsync();
+            switch (metadata.RoomType)
+            {
+                case RoomType.Default:
+                    await grainFactory.GetGrain<IDefaultRoomGrain>(roomId.Value)
+                        .ExecuteCommandAsync(new RemovePlayerCommand(userId));
+                    break;
+                case RoomType.Grouped:
+                    await grainFactory.GetGrain<IGroupedRoomGrain>(roomId.Value)
+                        .ExecuteCommandAsync(new RemovePlayerGroupedRoomCommand(userId));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             logger.LogInformation($"Игрок Id:{userId} полностью удален из комнаты Id: {roomId}");
         }
     }
