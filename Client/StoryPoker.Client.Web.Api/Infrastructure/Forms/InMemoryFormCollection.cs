@@ -83,7 +83,7 @@ internal static class InMemoryFormCollection
 
     private static IEnumerable<InputBase> GetAddGroupedPlayerForm()
     {
-        var playerNameInput = new DefaultInputForm
+        var playerNameInput = new PlayerNameInputForm
         {
             Key = "playerName",
             ControlType = "textbox",
@@ -122,7 +122,7 @@ internal static class InMemoryFormCollection
 
     private static IEnumerable<InputBase> GetAddPlayerForm()
     {
-        var playerNameInput = new DefaultInputForm
+        var playerNameInput = new PlayerNameInputForm
         {
             Key = "playerName",
             ControlType = "textbox",
@@ -137,7 +137,7 @@ internal static class InMemoryFormCollection
 
     private static IEnumerable<InputBase> GetCreatePokerRoomForm()
     {
-        var roomNameInput = new DefaultInputForm
+        var roomNameInput = new RoomNameInputForm()
         {
             Key = "roomName",
             ControlType = "textbox",
@@ -146,7 +146,7 @@ internal static class InMemoryFormCollection
             Order = 1,
             Type = "text",
         };
-        var playerNameInput = new DefaultInputForm
+        var playerNameInput = new PlayerNameInputForm
         {
             Key = "playerName",
             ControlType = "textbox",

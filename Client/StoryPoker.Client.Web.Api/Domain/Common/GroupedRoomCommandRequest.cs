@@ -5,6 +5,11 @@ using StoryPoker.Server.Abstractions.GroupedRoom.Commands;
 
 namespace StoryPoker.Client.Web.Api.Domain.Common;
 
+public interface IPlayerNameRequest
+{
+    public string PlayerName { get; }
+}
+
 [JsonDerivedType(typeof(AddPlayerGroupedRoomRequest),nameof(AddPlayerGroupedRoomRequest))]
 [JsonDerivedType(typeof(AddGroupsRoomRequest),nameof(AddGroupsRoomRequest))]
 [JsonDerivedType(typeof(RenameGroupRoomRequest),nameof(RenameGroupRoomRequest))]
@@ -23,7 +28,7 @@ public abstract record GroupedRoomCommandRequest
     public abstract GroupedRoomCommand ToInternalCommand(Guid userId);
 }
 
-public sealed record AddPlayerGroupedRoomRequest(string PlayerName, string GroupName) : GroupedRoomCommandRequest
+public sealed record AddPlayerGroupedRoomRequest(string PlayerName, string GroupName) : GroupedRoomCommandRequest, IPlayerNameRequest
 {
     public override GroupedRoomCommand ToInternalCommand(Guid userId)
         => new AddPlayerGroupedRoomCommand(userId, PlayerName, GroupName);

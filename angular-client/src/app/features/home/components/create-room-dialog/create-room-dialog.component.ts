@@ -6,6 +6,8 @@ import { Router, RouterModule } from '@angular/router';
 import { DialogRef } from '@angular/cdk/dialog';
 import { RoomMetadataService } from '../../../common/services/room-metadata.service';
 import { InitPokerRoomRequest } from '../../../common/models/room-metadata.model';
+import { AuthorizationService } from '../../../../core/authorization/services/authorization.service';
+import { FormParameters } from '../../../../core/dynamic-form/services/dynamic-form.service';
 
 @Component({
   selector: 'app-create-room-dialog',

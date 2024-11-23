@@ -19,7 +19,8 @@ internal static class OrleansExtensions
             siloSettings.ThrowIfNull("Не установлены настройки Silo");
             var dashboardOptions = hostBuilder.Configuration.GetSection(nameof(DashboardOptions)).Get<DashboardOptions>();
             dashboardOptions.ThrowIfNull("Не установлены настройки DashboardOptions");
-            silo.UseRedisClustering(options => options.ConfigurationOptions = new()
+            silo
+                .UseRedisClustering(options => options.ConfigurationOptions = new()
                 {
                     EndPoints = new EndPointCollection()
 					{

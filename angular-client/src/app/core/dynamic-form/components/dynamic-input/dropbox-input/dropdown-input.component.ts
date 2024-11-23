@@ -49,6 +49,5 @@ export class DropdownInputComponent implements OnInit {
     if (this.selectedOption) this.RemoveOptionsFromForm(this.selectedOption);
     this.AddOptionsToForm($event.target.value);
     this.selectedOption = $event.target.value;
-    console.log(this.form);
   }
 }

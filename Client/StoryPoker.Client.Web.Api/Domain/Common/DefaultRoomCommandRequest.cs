@@ -14,12 +14,17 @@ namespace StoryPoker.Client.Web.Api.Domain.Common;
 [JsonDerivedType(typeof(RemoveIssueDefaultRoomRequest),nameof(RemoveIssueDefaultRoomRequest))]
 [JsonDerivedType(typeof(SetCurrentIssueDefaultRoomRequest),nameof(SetCurrentIssueDefaultRoomRequest))]
 [JsonDerivedType(typeof(SetStoryPointDefaultRoomRequest),nameof(SetStoryPointDefaultRoomRequest))]
+[JsonDerivedType(typeof(UpdateSettingsDefaultRoomRequest),nameof(UpdateSettingsDefaultRoomRequest))]
 public abstract record DefaultRoomCommandRequest
 {
     public abstract DefaultRoomCommand ToInternalCommand(Guid userId);
 }
-
-public sealed record AddPlayerDefaultRoomRequest(string PlayerName) : DefaultRoomCommandRequest
+public sealed record UpdateSettingsDefaultRoomRequest(bool SpectatorCanVote, bool SkipBorderValues) : DefaultRoomCommandRequest
+{
+    public override DefaultRoomCommand ToInternalCommand(Guid userId)
+        => new UpdateSettingsCommand(SpectatorCanVote, SkipBorderValues);
+}
+public sealed record AddPlayerDefaultRoomRequest(string PlayerName) : DefaultRoomCommandRequest, IPlayerNameRequest
 {
     public override DefaultRoomCommand ToInternalCommand(Guid userId)
             => new AddPlayerCommand(userId, PlayerName);

@@ -55,9 +55,8 @@ export class VotingComponent implements OnInit, OnDestroy {
 
   showDeck(): boolean {
     if (!this.roomState.votingIssue) return false;
-    return (
-      !this.roomState.isSpectator &&
-      this.roomState.votingIssue.stage != VotingStage.NotStarted
-    );
+    const isVoting = this.roomState.votingIssue.stage != VotingStage.NotStarted;
+    const showSpectator = this.roomState.spectatorCanVote;
+    return (!this.roomState.isSpectator || showSpectator) && isVoting;
   }
 }

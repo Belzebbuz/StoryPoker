@@ -23,6 +23,8 @@ public class GroupedRoomController : BaseApiController
     [HttpPost("{id:guid}/command")]
     public async Task<ActionResult> ExecuteCommandAsync(Guid id, GroupedRoomCommandRequest request)
     {
+        if (request is AddPlayerGroupedRoomRequest req)
+            await SaveNameToCookieAsync(req);
         var userId = CurrentUser.UserId;
         var internalCommand = request.ToInternalCommand(userId);
         var result = await GetGrain(id)

@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  AfterContentInit,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { InputBase } from '../../models/input-base';
 import { CommonModule } from '@angular/common';
@@ -28,7 +36,8 @@ export class DynamicFormComponent implements OnInit {
   submitted = false;
   constructor(
     private qcs: InputControlService,
-    private formService: DynamicFormService
+    private formService: DynamicFormService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -36,7 +45,8 @@ export class DynamicFormComponent implements OnInit {
       .getInputs(this.formName, this.parameters)
       .subscribe((inputs) => {
         this.inputs = inputs;
-        this.form = this.qcs.toFormGroup(inputs as InputBase<any>[]);
+        this.form = this.qcs.toFormGroup(this.inputs as InputBase<any>[]);
+        this.cdr.detectChanges();
       });
   }
 

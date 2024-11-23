@@ -17,7 +17,9 @@ public static class InternalDefaultRoomExtensions
             IsSpectator = internalRoom.Players.TryGetValue(playerId, out var player) && player.IsSpectator,
             Players = GetPlayers(playerId,internalRoom),
             Issues = GetIssues(internalRoom),
-            IssueOrder = internalRoom.IssueOrderBy
+            IssueOrder = internalRoom.IssueOrderBy,
+            SpectatorCanVote = internalRoom.SpectatorCanVote,
+            SkipBorderValues = internalRoom.SkipBorderValues
         };
     }
 

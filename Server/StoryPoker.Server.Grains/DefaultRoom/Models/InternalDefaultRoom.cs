@@ -12,13 +12,15 @@ namespace StoryPoker.Server.Grains.DefaultRoom.Models;
 public record InternalDefaultRoom : AggregateRoot, IRoomState
 {
     [JsonProperty] public string Name { get; private set; } = string.Empty;
-    public IReadOnlyDictionary<Guid, InternalDefaultPlayer> Players => _players; // 1 - TAG
+    public IReadOnlyDictionary<Guid, InternalDefaultPlayer> Players => _players;
     private readonly Dictionary<Guid, InternalDefaultPlayer> _players = new();
-    public IReadOnlyDictionary<Guid, InternalDefaultIssue> Issues => _issues; // MANY - TAGS TAG -> ОЦЕНКА
+    public IReadOnlyDictionary<Guid, InternalDefaultIssue> Issues => _issues;
     private readonly Dictionary<Guid, InternalDefaultIssue> _issues = new();
     [JsonProperty] public Guid? VotingIssueId { get; private set; }
     [JsonProperty] public bool Instantiated { get; private set; }
     [JsonProperty] public IssueOrder IssueOrderBy { get; private set; }
+    [JsonProperty] public bool SpectatorCanVote { get; private set; }
+    [JsonProperty] public bool SkipBorderValues { get; private set; }
     [JsonIgnore] public InternalDefaultIssue? VotingIssue => VotingIssueId.HasValue ? _issues[VotingIssueId.Value] : null;
     public static InternalDefaultRoom Init(CreateRoomRequest request)
     {
@@ -26,7 +28,8 @@ public record InternalDefaultRoom : AggregateRoot, IRoomState
         var state = new InternalDefaultRoom()
         {
             Name = request.RoomName,
-            Instantiated = true
+            Instantiated = true,
+            SpectatorCanVote = true
         };
         state.AddPlayer(playerState);
         return state;
@@ -71,6 +74,17 @@ public record InternalDefaultRoom : AggregateRoot, IRoomState
             Order = order
         };
         AddPlayer(player);
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> SetSpectatorVote(bool canVote, bool skipBorderValues)
+    {
+        if (VotingIssue is not null && VotingIssue.Stage == VotingStage.Voting)
+            return Error.Failure(description: "Нельзя менять настройки во время голосования");
+        SpectatorCanVote = canVote;
+        SkipBorderValues = skipBorderValues;
+        if (VotingIssue is not null && VotingIssue.Stage == VotingStage.VoteEnded)
+            VotingIssue.RecalculateStoryPoints(SkipBorderValues);
         return Result.Success;
     }
 
@@ -124,7 +138,7 @@ public record InternalDefaultRoom : AggregateRoot, IRoomState
             return Error.Failure(description: "Не выбран объект голосования");
         if (VotingIssue.Stage == VotingStage.VoteEnded)
             return Result.Success;
-        VotingIssue.StopVote();
+        VotingIssue.StopVote(SkipBorderValues);
         return Result.Success;
     }
 
@@ -185,10 +199,10 @@ public record InternalDefaultRoom : AggregateRoot, IRoomState
 
         if (VotingIssue.Stage == VotingStage.VoteEnded)
         {
-            VotingIssue.RecalculateStoryPoints();
+            VotingIssue.RecalculateStoryPoints(SkipBorderValues);
             return Result.Success;
         }
-        if (VotingIssue.PlayerStoryPoints.Count == _players.Count - 1 && VotingIssue.Stage == VotingStage.Voting)
+        if (VotingIssue.PlayerStoryPoints.Count == _players.Count - (SpectatorCanVote ? 0 : 1) && VotingIssue.Stage == VotingStage.Voting)
         {
             SetEndingTimerVote();
         }

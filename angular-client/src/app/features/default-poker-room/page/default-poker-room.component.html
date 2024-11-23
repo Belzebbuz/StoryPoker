@@ -16,15 +16,42 @@
       [votingIssue]="roomState.votingIssue"
       [roomId]="pokerRoomId"
       [players]="roomState.players"
+      [specatorCanVote]="roomState.spectatorCanVote"
       class="p-2 md:w-1/4 max-md:h-1/6 flex flex-col justify-items-center"
     />
 
     <!-- ГОЛОСОВАНИЕ -->
-    <app-voting
-      [roomId]="pokerRoomId"
-      [roomState]="roomState"
-      class="md:w-1/2 max-md:h-2/3 border-x border-primary-gray-light"
-    />
+    <div
+      class="relative flex flex-row md:w-1/2 max-md:h-2/3 border-x border-primary-gray-light"
+    >
+      <app-voting [roomId]="pokerRoomId" class="grow" [roomState]="roomState" />
+      <div
+        appClickOutside
+        (clickOutside)="settingsOpened = false"
+        class="flex-none absolute right-1 top-1"
+      >
+        <app-icon-cog
+          (click)="settingsOpened = !settingsOpened"
+          class="hover:cursor-pointer"
+          *ngIf="roomState.isSpectator"
+          [className]="'w-8 h-8'"
+        />
+        <div
+          *ngIf="settingsOpened"
+          class="flex flex-col absolute right-6 top-5 w-80 rounded border border-gray-400 bg-white"
+        >
+          <div class="flex flex-row  p-2 gap-4 w-full items-center text-center">
+            <input type="checkbox" [(ngModel)]="spectatorCanVote" class="w-5 h-5" />
+            <span>Ведущий голосует</span>
+          </div>
+          <div matTooltip="В расчете не будут учитываться одна минимальная и максимальная оценка" [matTooltipClass]="'border bg-gray-50 rounded'" class="flex flex-row  p-2 gap-4 w-full items-center text-center">
+            <input type="checkbox" [(ngModel)]="skipBorderValues" class="w-5 h-5" />
+            <span>Пропуск граничных оценок</span>
+          </div>
+          <button (click)="setRoomSettings()" class="btn-primary-outline m-4">Сохранить</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ЗАДАЧИ -->
     <app-issues-list

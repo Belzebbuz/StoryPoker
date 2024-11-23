@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Attributes;
 using StoryPoker.Client.Web.Api.Domain.Common;
 using StoryPoker.Server.Abstractions.DefaultRoom;
-using StoryPoker.Server.Abstractions.DefaultRoom.Commands;
 using StoryPoker.Server.Abstractions.DefaultRoom.Models;
 
 namespace StoryPoker.Client.Web.Api.Controllers;
@@ -23,6 +25,8 @@ public class DefaultRoomController : BaseApiController
     [HttpPost("{id:guid}/command")]
     public async Task<ActionResult> ExecuteCommandAsync(Guid id, DefaultRoomCommandRequest request)
     {
+        if (request is AddPlayerDefaultRoomRequest req)
+            await SaveNameToCookieAsync(req);
         var userId = CurrentUser.UserId;
         var internalCommand = request.ToInternalCommand(userId);
         var result = await GetGrain(id)

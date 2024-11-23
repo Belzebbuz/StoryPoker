@@ -1,12 +1,20 @@
 export interface IDefaultRoomRequest {
   $type: string;
 }
-
 export class AddPlayerDefaultRoomRequest implements IDefaultRoomRequest {
   public $type = 'AddPlayerDefaultRoomRequest';
   public PlayerName: string;
   constructor(playerName: string) {
     this.PlayerName = playerName;
+  }
+}
+export class UpdateSettingsDefaultRoomRequest implements IDefaultRoomRequest {
+  public $type = 'UpdateSettingsDefaultRoomRequest';
+  public SpectatorCanVote: boolean;
+  public SkipBorderValues: boolean;
+  constructor(spectatorCanVote: boolean, skipBorderValues: boolean) {
+    this.SpectatorCanVote = spectatorCanVote;
+    this.SkipBorderValues = skipBorderValues;
   }
 }
 export class SelectSpectatorDefaultRoomRequest implements IDefaultRoomRequest {
@@ -91,6 +99,8 @@ export interface GetRoomStateResponse {
   players: PlayerState[];
   issues: IssueState[];
   issueOrder: IssueOrder;
+  spectatorCanVote: boolean;
+  skipBorderValues: boolean;
 }
 
 export interface PlayerState {

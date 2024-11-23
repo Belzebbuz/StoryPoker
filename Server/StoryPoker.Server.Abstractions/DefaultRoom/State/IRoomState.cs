@@ -9,6 +9,7 @@ public interface IRoomState
     ErrorOr<Success> SetIssuesNewOrder(Guid issueId, int newOrder);
     ErrorOr<Success> SetIssueOrderBy(IssueOrder order);
     ErrorOr<Success> AddNewPlayer(DefaultRoomRequest.AddPlayer request);
+    ErrorOr<Success> SetSpectatorVote(bool canVote, bool skipBorderValues);
     ErrorOr<Success> RemovePlayer(Guid id);
     ErrorOr<Success> SetNewSpectator(Guid playerId);
     ErrorOr<Success> StartVote();

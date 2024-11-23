@@ -16,12 +16,12 @@ public static class OrleansExtensions
             var orleansSettings = config.GetSection(nameof(ClusterConfig)).Get<ClusterConfig>();
             orleansSettings.ThrowIfNull("Отсутствуют настройки кластера");
             client
-                .UseRedisClustering(options => options.ConfigurationOptions = new()
+                .UseRedisClustering(options =>
                 {
-                    EndPoints = new EndPointCollection()
+                    options.ConfigurationOptions = new()
                     {
-                        new(orleansSettings.ConnectionString)
-                    }
+                        EndPoints = new EndPointCollection() { new(orleansSettings.ConnectionString) }
+                    };
                 })
                 .Configure<ClusterOptions>(options =>
                 {

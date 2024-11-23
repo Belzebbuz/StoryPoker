@@ -14,4 +14,6 @@ public record DefaultRoomStateResponse : IRoomStateResponse
     [Id(5)]public required ICollection<PlayerStateResponse> Players { get; init;  }
     [Id(6)]public required ICollection<IssueStateResponse> Issues { get; init;  }
     [Id(7)]public required IssueOrder IssueOrder { get; init;  }
+    [Id(8)]public required bool SpectatorCanVote { get; init;  }
+    [Id(9)]public required bool SkipBorderValues { get; init;  }
 }

@@ -11,6 +11,8 @@ public abstract record InputBase<T> : InputBase
 [JsonDerivedType(typeof(DefaultInputForm))]
 [JsonDerivedType(typeof(MultiSelectGroupInputForm))]
 [JsonDerivedType(typeof(SelectGroupInputForm))]
+[JsonDerivedType(typeof(PlayerNameInputForm))]
+[JsonDerivedType(typeof(RoomNameInputForm))]
 public abstract record InputBase
 {
     public required string Key { get; init; }
@@ -20,6 +22,6 @@ public abstract record InputBase
     public required string ControlType { get; init; }
     public required string Type { get; init; }
     public IDictionary<string, OptionValue>? Options { get; set; }
-    public abstract Task AttachData(IGrainFactory grainFactory, IDictionary<string, string> parameters);
+    public abstract Task AttachData(IServiceProvider serviceProvider, IDictionary<string, string> parameters);
 }
 public record OptionValue(string Value, ICollection<InputBase> Inputs);

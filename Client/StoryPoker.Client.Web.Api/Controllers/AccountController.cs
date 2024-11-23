@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using StoryPoker.Client.Web.Api.Middlewares.CurrentUser;
 
 namespace StoryPoker.Client.Web.Api.Controllers;
 
@@ -17,4 +18,7 @@ public class AccountController : ControllerBase
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(new ClaimsPrincipal(identity));
     }
+
+    [HttpGet("name")]
+    public string? GetNameAsync([FromServices] ICurrentUser user) => user.Name;
 }

@@ -1,7 +1,7 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit, OnDestroy, input, model } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { NotifiactionType } from '../../../core/signalr/models/signalr.models';
@@ -12,8 +12,14 @@ import { IssueComponent } from '../components/issue/issue.component';
 import { IssuesListComponent } from '../components/issues-list/issues-list.component';
 import { PlayersListComponent } from '../components/players-list/players-list.component';
 import { VotingComponent } from '../components/voting/voting.component';
-import { GetRoomStateResponse } from '../models/default-poker-room.model';
+import {
+  GetRoomStateResponse,
+  UpdateSettingsDefaultRoomRequest,
+} from '../models/default-poker-room.model';
 import { DefaultRoomService } from '../services/default-room.service';
+import { IconCogComponent } from '../../../core/icons/components/icon-cog/icon-cog.component';
+import { ClickOutsideDirective } from '../../../core/derictives/click-outside.directive';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-poker-room',
@@ -26,12 +32,19 @@ import { DefaultRoomService } from '../services/default-room.service';
     CommonModule,
     ReactiveFormsModule,
     VotingComponent,
+    IconCogComponent,
+    ClickOutsideDirective,
+    FormsModule,
+    MatTooltip,
   ],
 })
 export class DefaultPokerRoomComponent implements OnInit, OnDestroy {
   roomState?: GetRoomStateResponse;
   pokerRoomId?: string;
   subscriptions = new Subscription();
+  settingsOpened = false;
+  spectatorCanVote = false;
+  skipBorderValues = false;
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -49,6 +62,8 @@ export class DefaultPokerRoomComponent implements OnInit, OnDestroy {
         if (id != this.pokerRoomId) return;
         this.roomService.getState(id).subscribe((state) => {
           this.roomState = state;
+          this.spectatorCanVote = this.roomState.spectatorCanVote;
+          this.skipBorderValues = this.roomState.skipBorderValues;
         });
       });
     this.subscriptions.add(subscription);
@@ -88,8 +103,25 @@ export class DefaultPokerRoomComponent implements OnInit, OnDestroy {
         }
         this.signalr.subscribeToRoom(this.pokerRoomId!);
         this.roomState = response;
+        this.spectatorCanVote = this.roomState.spectatorCanVote;
+        this.skipBorderValues = this.roomState.skipBorderValues;
         document.title = 'SP - ' + this.roomState.name;
       });
     this.subscriptions.add(subscription);
+  }
+
+  setRoomSettings() {
+    if (!this.pokerRoomId) return;
+    this.settingsOpened = false;
+
+    const req = new UpdateSettingsDefaultRoomRequest(
+      this.spectatorCanVote,
+      this.skipBorderValues
+    );
+    this.roomService
+      .executeCommand(this.pokerRoomId, req)
+      .subscribe((result) => {
+        if (result) this.settingsOpened = false;
+      });
   }
 }

@@ -23,6 +23,7 @@ export class PlayerComponent implements OnInit {
   @Input() votingIssue?: IssueState;
   @Input() currentPlayerIsSpectator = false;
   @Input() roomId!: string;
+  @Input() spectatorCanVote = false;
   constructor(private roomService: DefaultRoomService) {}
 
   ngOnInit() {}
@@ -47,7 +48,8 @@ export class PlayerComponent implements OnInit {
   }
 
   getPointsState(): ShowPointsState {
-    if (this.player.isSpectator) return ShowPointsState.Spectator;
+    if (this.player.isSpectator && !this.spectatorCanVote)
+      return ShowPointsState.Spectator;
     if (!this.votingIssue || this.votingIssue.stage == VotingStage.NotStarted)
       return ShowPointsState.Cross;
     if (

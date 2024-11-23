@@ -6,7 +6,7 @@ public record UpdateGroupedIssueTitleInputForm() : InputBase<string>
 {
     private const string RoomIdParameterName = "roomId";
     private const string IssueIdParameterName = "issueId";
-    public override async Task AttachData(IGrainFactory grainFactory, IDictionary<string, string> parameters)
+    public override async Task AttachData(IServiceProvider serviceProvider, IDictionary<string, string> parameters)
     {
         if (!parameters.TryGetValue(RoomIdParameterName, out var stringRoomId))
             throw new ArgumentException(RoomIdParameterName);
@@ -17,6 +17,7 @@ public record UpdateGroupedIssueTitleInputForm() : InputBase<string>
             throw new ArgumentException(IssueIdParameterName);
         if(!Guid.TryParse(stringIssueId, out var issueId))
             throw new ArgumentException(IssueIdParameterName);
+        var grainFactory = serviceProvider.GetRequiredService<IGrainFactory>();
         var issue = await grainFactory.GetGrain<IGroupedRoomGrain>(roomId).GetIssueAsync(issueId);
         Value = issue.Title;
     }

@@ -3,7 +3,7 @@ using StoryPoker.Client.Web.Api.Abstractions.Forms;
 
 namespace StoryPoker.Client.Web.Api.Infrastructure.Forms;
 
-public class FormService(IGrainFactory grainFactory) : IFormService
+public class FormService(IServiceProvider serviceProvider) : IFormService
 {
     public async Task<ErrorOr<IEnumerable<InputBase>>> GetFormAsync(string key, IDictionary<string, string> parameters)
     {
@@ -12,7 +12,7 @@ public class FormService(IGrainFactory grainFactory) : IFormService
             var form = formGroup.ToList();
             foreach (var input in form)
             {
-                await input.AttachData(grainFactory, parameters);
+                await input.AttachData(serviceProvider, parameters);
             }
             return form;
         }

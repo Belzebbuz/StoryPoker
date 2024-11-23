@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using StoryPoker.Client.Web.Api.Abstractions;
 using StoryPoker.Client.Web.Api.Configurations;
-using StoryPoker.Client.Web.Api.Domain.Room.Models;
+using StoryPoker.Client.Web.Api.Domain.Metadata.Models;
 using StoryPoker.Server.Abstractions.Metadata;
 using StoryPoker.Server.Abstractions.Metadata.Models.Enums;
 
@@ -17,6 +17,7 @@ public class RoomMetadataController : BaseApiController
         InitRoomStateRequest request,
         [FromServices] IOptionsMonitor<WebHookConfig> webhookConfig)
     {
+        await SaveNameToCookieAsync(request);
         var userId = CurrentUser.UserId;
         var initStateRequest = request.ToInternal(userId);
         var result = await GrainClient

@@ -1,8 +1,13 @@
-﻿using ErrorOr;
+﻿using System.Security.Claims;
+using ErrorOr;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using StoryPoker.Client.Web.Api.Domain.Common;
 using StoryPoker.Client.Web.Api.Middlewares.CurrentUser;
+using Throw;
 
 namespace StoryPoker.Client.Web.Api.Abstractions;
 
@@ -45,5 +50,18 @@ public abstract class BaseApiController : ControllerBase
         errors.ForEach(error => modelStateDictionary.AddModelError(error.Code, error.Description));
 
         return ValidationProblem(modelStateDictionary);
+    }
+
+    protected async Task SaveNameToCookieAsync(IPlayerNameRequest request)
+    {
+        if(!string.IsNullOrEmpty(CurrentUser.Name) && CurrentUser.Name == request.PlayerName)
+            return;
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, CurrentUser.UserId.ThrowIfNull().Value.ToString()),
+            new(ClaimTypes.Name, request.PlayerName)
+        };
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(new ClaimsPrincipal(identity));
     }
 }

@@ -32,32 +32,39 @@ public record InternalDefaultIssue
         return Result.Success;
     }
 
-    public ErrorOr<Success> StopVote()
+    public ErrorOr<Success> StopVote(bool skipBorderValues)
     {
         if (Stage != VotingStage.VoteEnding)
             return Error.Failure(description: "Таймер остановки не был запущен");
 
         Stage = VotingStage.VoteEnded;
-        RecalculateStoryPoints();
+        RecalculateStoryPoints(skipBorderValues);
         return Result.Success;
     }
 
-    public void RecalculateStoryPoints()
+    public void RecalculateStoryPoints(bool skipBorderValues)
     {
-        StoryPoints = CalculateStoryPoints();
+        StoryPoints = CalculateStoryPoints(skipBorderValues);
         FibonacciStoryPoints = CalculateFibonacciStoryPoints(StoryPoints);
     }
 
     internal bool CanChangeVotingIssue() => Stage is VotingStage.NotStarted or VotingStage.VoteEnded;
     internal bool CanRemove() => Stage is VotingStage.Voting or VotingStage.VoteEnding;
-    private float? CalculateStoryPoints() => PlayerStoryPoints.Count == 0
-        ? null
-        : (float)Math.Round(PlayerStoryPoints.Average(x => x.Value),1);
+    private float? CalculateStoryPoints(bool skipBorderValues)
+    {
+        var points = skipBorderValues && PlayerStoryPoints.Count > 2
+            ? PlayerStoryPoints.OrderBy(x => x.Value).Skip(1).SkipLast(1)
+            : PlayerStoryPoints;
+        return PlayerStoryPoints.Count == 0
+            ? null
+            : (float)Math.Round(points.Average(x => x.Value), 1);
+    }
 
     private static int? CalculateFibonacciStoryPoints(float? storyPoints)
     {
         if (!storyPoints.HasValue)
             return null;
+
         foreach (var fib in Fibonacci.Sequence.Where(fib => fib >= storyPoints.Value))
         {
             return fib;

@@ -10,6 +10,10 @@ internal class CurrentUser : ICurrentUser, ICurrentUserInitializer
         ? Guid.Parse(_user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? Guid.Empty.ToString())
         : _userId;
 
+    public string? Name => _user?.Identity?.IsAuthenticated is true
+        ? _user?.FindFirstValue(ClaimTypes.Name)
+        : default;
+
     public void SetCurrentUser(ClaimsPrincipal principal)
     {
         _user = principal;
